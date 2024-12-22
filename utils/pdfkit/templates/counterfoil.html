@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/utils/pdfkit/assets/css/counterfoil.css" />
+</head>
+
+<body>
+  <div class="container flex-column">
+    <div class="flex flex-row space-between">
+      <div class="flex flex-column">
+        <div>
+          {{company}}
+        </div>
+        <div>
+          Name:{{first_name}} {{last_name}}
+        </div>
+        <div>
+          SSN: {{social_security_number}}
+        </div>
+      </div>
+
+      <div>
+        <div class="flex flex-row">
+          <div style=" font-weight: bold;"> Period: </div>
+          <span> {{periodo}}</span>
+        </div>
+        <div class="flex flex-row" style="justify-content: space-between;">
+          <span style="font-weight: bold; margin: 0px; padding: 0px;">
+            From:
+          </span>
+          <span>
+            {{start_date}}
+          </span>
+          <span style="font-weight: bold; margin: 0px; padding: 0px;">
+            To:
+          </span>
+          <span>
+            {{end_date}}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-row" style="width: 100%;">
+      <div class="flex flex-column" style="width: 50%;">
+        <div class="align-center">
+          <h3>GROSS PAY</h3>
+        </div>
+        <table width="100%">
+          <tr>
+            <th class="text-color-black" style="width: 50%">WAGES</th>
+            <th class="text-color-black" style="width: 20%">CURRENT</th>
+            <th class="text-color-black" style="width: 30%">ACCUMULATED</th>
+          </tr>
+          <tr>
+            <td class="text-color-black">REGULAR PAY</td>
+            <td class="text-color-black align-right">$ {{ regular_pay }}</td>
+            <td class="text-color-black align-right">${{2,400.00}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">OVER TIME PAY</td>
+            <td class="text-color-black align-right">${{overtime_pay}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">MEAL TIME PAY</td>
+            <td class="text-color-black align-right">${{meal_time_pay}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">SICK TIME PAY</td>
+            <td class="text-color-black align-right">${{sick_pay}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">VACATION TIME PAY</td>
+            <td class="text-color-black" style="text-align: right;">${{vacation_pay}}</td>
+          </tr>
+        </table>
+      </div>
+      <div class="flex flex-column" style="width: 50%;">
+        <div style="text-align: center;">
+          <h3>DEDUCTIONS</h3>
+        </div>
+        <table width="100%">
+          <tr>
+            <th class="text-color-black" style="width: 50%">CONCEPTS</th>
+            <th class="text-color-black" style="width: 20%">CURRENT</th>
+          </tr>
+          <tr>
+            <td class="text-color-black">SOCIAL SECURITY</td>
+            <td class="text-color-black" style="text-align: right;">${{secure_social}}</td>
+            <td class="text-color-black" style="text-align: right;">${{2,400.00}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">MEDICARE</td>
+            <td class="text-color-black" style="text-align: right;">${{medicare}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">WITHHOLD TAX</td>
+            <td class="text-color-black" style="text-align: right;">${{60.00}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">INABILITY</td>
+            <td class="text-color-black" style="text-align: right;">${{inability}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">MEDICAL PLAN</td>
+            <td class="text-color-black" style="text-align: right;">${{0.00}}</td>
+          </tr>
+          <tr>
+            <td class="text-color-black">BOND</td>
+            <td class="text-color-black" style="text-align: right;">${{0.00}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+
+</html>

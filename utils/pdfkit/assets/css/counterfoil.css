@@ -1,0 +1,87 @@
+:root {
+  font-family: "Kanit", sans-serif;
+}
+
+.bordered {
+  border: 1px solid black;
+}
+
+
+
+tr:nth-child(even) {
+  background-color: #eeeeee;
+}
+
+tr {
+  border-bottom: 1px solid black;
+}
+
+.container {
+  display: -webkit-box;
+  display: flex;
+  height: 50vh;
+  margin: 0 auto;
+  padding: 10px;
+  width: 100vw;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.flex {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+
+.flex-column {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+
+.flex-row {
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+}
+
+.space-between {
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+}
+
+.text-color-blue {
+  color: #3366ff;
+}
+
+.text-color-black {
+  color: #000000;
+}
+
+.text-color-red {
+  color: #800000;
+}
+
+.justify-center {
+  justify-content: center;
+  -webkit-justify-content: center;
+}
+
+.align-center {
+  text-align: center;
+  align-items: center;
+  -webkit-align-items: center;
+}
+
+.align-right {
+  text-align: right;
+  align-items: end;
+  -webkit-align-items: end;
+}
