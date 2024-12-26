@@ -11,6 +11,7 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy import or_
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 
 
 auth_router = APIRouter()
@@ -139,3 +140,42 @@ async def currentUser(user: user_dependency, db: db_dependency):
     )
 
     return {"profile": profile, "user": user}
+
+
+class changePassword(BaseModel):
+    current_password: str | None
+    new_password: str | None
+    
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency): # Add db dependency
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")  # Use email as username
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user = db.query(User).filter(User.email == username).first() # Query for the user *object*
+        if user is None:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        return user # Return the User object, not a dictionary
+
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+user_dependency = Annotated[User, Depends(get_current_user)]  # Type hint correctly
+
+
+@auth_router.post("/change-password")
+async def change_password(changePassword: changePassword, db: db_dependency, current_user: User = Depends(get_current_user)): # Use current_user
+
+    if not await current_user.verify_password(changePassword.current_password):  # Call on User object
+        raise HTTPException(status_code=401, detail="Incorrect current password")
+
+    current_user.password = await current_user.hash_password(changePassword.new_password)  # Use current_user
+    db.commit()
+    db.refresh(current_user)  # Use current_user
+
+    return {"message": "Password changed successfully"}

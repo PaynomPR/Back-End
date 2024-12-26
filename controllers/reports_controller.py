@@ -952,7 +952,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
 
     def regular_pay(regular_amount , regular_time, salary, others, bonus):
         time_hours = convertir_horas_decimales(regular_time)
-        return regular_amount * time_hours + salary + others +bonus
+        return round(regular_amount * time_hours + salary + others +bonus,2)
 
 
     def calculate_payment(payment_type, regular_amount):
@@ -1038,7 +1038,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
     info = {
         # EMPLOYERS INFO
         "first_name": employer.first_name,
-        "salary": time_query.salary,
+        "salary": round(time_query.salary,2),
         "others": time_query.others,
         "vacation_time": minutes_to_time(( vacation_acum* 60)+time_to_minutes(employer.vacation_time)- time_to_minutes(total_vacation_time)),
         "sick_time": minutes_to_time((sicks_acum * 60)+time_to_minutes(employer.sick_time)- time_to_minutes(total_sick_time)),

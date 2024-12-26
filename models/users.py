@@ -3,8 +3,13 @@ from sqlalchemy import TIMESTAMP, ForeignKey,Column, Integer, String, Boolean, f
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import relationship
+from passlib.context import CryptContext
 
 from database.config import Base
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 class User(Base):
     __tablename__ = "users"
@@ -20,7 +25,9 @@ class User(Base):
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
     role: Mapped["Role"] = relationship(back_populates="user")
     codes: Mapped["Code"] =   relationship("Code",secondary="users_coders",back_populates="users")
-    
+   
+
+
    
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     deleted_at: Mapped[TIMESTAMP] = mapped_column(
@@ -34,6 +41,11 @@ class User(Base):
         nullable=True,
         onupdate=func.now(),
     )
+    async def verify_password(self, plain_password: str):
+         return pwd_context.verify(plain_password, self.password) # Verify against the existing 'password' field
+
+    async def hash_password(self, plain_password: str): # Use async here too
+        return pwd_context.hash(plain_password) # await is not needed here
 
 
 class Role(Base):
