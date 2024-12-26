@@ -12,11 +12,9 @@ from jose import jwt, JWTError
 from sqlalchemy import or_
 from datetime import datetime, timedelta
 from pydantic import BaseModel
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import AuthorizedSession
 
-from google.oauth2.id_token import verify_firebase_token
+
+
 import pyotp
 
 auth_router = APIRouter()
