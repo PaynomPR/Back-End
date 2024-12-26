@@ -19,33 +19,7 @@ accountant_router = APIRouter()
 
 def create_accountant_controller(accountants_data, user):
     try: 
-        is_user = (
-            session.query(User)
-            .where(User.email == accountants_data.email or User.phone == accountants_data.phone)
-            .one_or_none()
-        )
-    
-
-        if is_user:
-            # Usamos una lista para guardar los mensajes de error
-            errores = []
-
-            # Comprobamos si el email o el teléfono coinciden con el usuario existente
-            if is_user.email == accountants_data.email:
-                errores.append(f"email: {accountants_data.email}")
-
-            if is_user.phone == accountants_data.phone:
-                errores.append(f"phone: {accountants_data.phone}")
-
-            # Unimos los mensajes de error con "and" si hay más de uno
-            msg = " and ".join(errores)
-
-            # Usamos una expresión ternaria para asignar el valor de ok
-            ok = False if errores else True
-
-            # Devolvemos el resultado como un diccionario
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                                detail="El Email y Telefono ya estan registrados.")
+        
 
         hashed_password = bcrypt_context.hash("123456")
 

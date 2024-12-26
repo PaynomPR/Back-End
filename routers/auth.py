@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-
+import os
 from starlette import status
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -12,11 +12,19 @@ from jose import jwt, JWTError
 from sqlalchemy import or_
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import AuthorizedSession
 
+from google.oauth2.id_token import verify_firebase_token
+import pyotp
 
 auth_router = APIRouter()
 
-SECRET_KEY = "DEMO"
+KEY =  os.environ.get("JWT_SECRET")
+
+
+SECRET_KEY = os.environ.get("JWT_SECRET")
 ALGORITHM = "HS256"
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -147,7 +155,7 @@ class changePassword(BaseModel):
     new_password: str | None
     
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency): # Add db dependency
+async def get_current_user2(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency): # Add db dependency
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")  # Use email as username
@@ -169,7 +177,7 @@ user_dependency = Annotated[User, Depends(get_current_user)]  # Type hint correc
 
 
 @auth_router.post("/change-password")
-async def change_password(changePassword: changePassword, db: db_dependency, current_user: User = Depends(get_current_user)): # Use current_user
+async def change_password(changePassword: changePassword, db: db_dependency, current_user: User = Depends(get_current_user2)): # Use current_user
 
     if not await current_user.verify_password(changePassword.current_password):  # Call on User object
         raise HTTPException(status_code=401, detail="Incorrect current password")
@@ -179,3 +187,41 @@ async def change_password(changePassword: changePassword, db: db_dependency, cur
     db.refresh(current_user)  # Use current_user
 
     return {"message": "Password changed successfully"}
+
+class code(BaseModel):
+    code: str | None
+
+
+@auth_router.post("/2fa/verify")
+async def verify_totp(code: code,db: db_dependency, current_user: User = Depends(get_current_user2)):
+    hashed_secret_key = current_user.key_2fa # get stored, *hashed* key
+
+    # IMPORTANT: Don't try to "unhash".  bcrypt is one-way.
+
+
+    totp_ = pyotp.TOTP(hashed_secret_key) # Use the hashed key here
+    if totp_.verify(code.code):
+        # ... 2FA successful
+        return {"message": "2FA successful"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid TOTP code.")
+    
+
+@auth_router.post("/2fa/active")
+async def active_totp(db: db_dependency, current_user: User = Depends(get_current_user2)): # Use current_user
+    if current_user.is_2fa:
+        # If 2FA is already active, regenerate URI
+        key = current_user.key_2fa  # Retrieve the *hashed* key
+        provisioning_uri = pyotp.totp.TOTP(key).provisioning_uri(name=current_user.email, issuer_name="Paynom") # Directly use hashed key    
+        return {"result": provisioning_uri}
+
+    # If 2FA is not active, generate new key, hash, and store:
+    key = pyotp.random_base32() # Generate new key
+    current_user.is_2fa = True
+   
+    current_user.key_2fa = key  # Store only the hashed key
+    db.commit()
+    db.refresh(current_user)
+
+    provisioning_uri = pyotp.totp.TOTP(key).provisioning_uri(name=current_user.email, issuer_name="Paynom")  # Use hashed key
+    return {"result": provisioning_uri}

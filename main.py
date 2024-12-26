@@ -83,5 +83,9 @@ app.include_router(outtime_router, tags=["outtime_router"], prefix="/api/outtime
 app.include_router(report_router, tags=["report_router"], prefix="/api/reports")
 app.include_router(period_routes, tags=["period_router"], prefix="/api/period")
 
+
+
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", port=int(PORT), host="0.0.0.0", reload=True)

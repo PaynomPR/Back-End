@@ -26,7 +26,8 @@ class User(Base):
     role: Mapped["Role"] = relationship(back_populates="user")
     codes: Mapped["Code"] =   relationship("Code",secondary="users_coders",back_populates="users")
    
-
+    is_2fa : Mapped[bool] = mapped_column(Boolean, default=False)
+    key_2fa : Mapped[str] = mapped_column(String(50), nullable=True)
 
    
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)

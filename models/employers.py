@@ -81,8 +81,10 @@ class Employers(Base):
     address_number: Mapped[str] = mapped_column(String(50), nullable=True)
     phone_number: Mapped[str] = mapped_column(String(50), nullable=True)
     smartphone_number: Mapped[str] = mapped_column(String(50), nullable=True)
+    
 
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     deleted_at: Mapped[TIMESTAMP] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True
     )
