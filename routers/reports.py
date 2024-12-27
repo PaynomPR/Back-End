@@ -76,7 +76,7 @@ async def all_counterfoil(company_id: int, period_id: int):
 
 
 
-@report_router.post("/counterfoil/range")
+@report_router.post("/wages/range")
 async def counterfoil_by_range(companyRange: CompanyRange):
     return counterfoil_by_range_controller(companyRange.company_id, companyRange.employer_id,companyRange.start,companyRange.end)
 

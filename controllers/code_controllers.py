@@ -4,7 +4,8 @@ from datetime import  datetime
 from fastapi import APIRouter,  Depends, HTTPException, status
 from fastapi import BackgroundTasks
 from database.config import session
-from models.users import Code
+from models.users import Code, UserCode
+
 from schemas.codes import CodeSchema
 from routers.mail import send_email_background
 code_router = APIRouter()
@@ -125,3 +126,28 @@ def disable_code_controller(id):
         )
     finally:
         session.close()
+
+def delete_code_controller(id):
+    try: 
+        # Verificar si la compañía tiene time asociados
+        code_count = session.query(UserCode).filter(UserCode.code_id == id).count()
+
+        if code_count > 0:   
+            return {"ok": False, "msg": "El codigo ya tiene un usuario asignado y no puede ser eliminada.", "result": None}
+        # Si no hay empleados, proceder con la eliminación
+        code_query = session.query(Code).filter(Code.id == id).first()
+        if code_query:
+            session.delete(code_query)
+            session.commit()
+            return {"ok": True, "msg": "Codigo eliminado con éxito.", "result": code_query}
+        else:
+            return {"ok": False, "msg": "Empleado no encontrada.", "result": None}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Se ha producido un error {str(e)}"
+        )
+    finally:
+        session.close()
+        

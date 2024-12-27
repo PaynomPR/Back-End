@@ -1,7 +1,7 @@
 from fastapi import APIRouter,  Depends, HTTPException
 from fastapi import BackgroundTasks
 from schemas.codes import CodeSchema
-from controllers.code_controllers import create_code_controller, disable_code_controller, get_all_codes_controller, get_code_by_id_controller, update_code_controller
+from controllers.code_controllers import delete_code_controller, create_code_controller, disable_code_controller, get_all_codes_controller, get_code_by_id_controller, update_code_controller
 
 
 code_router = APIRouter()
@@ -31,3 +31,12 @@ async def get_code_by_id(code_id: int):
 @code_router.delete("/{id}")
 async def disable_code(id: int):
     return disable_code_controller(id)
+
+
+
+
+
+
+@code_router.delete("/delete/{id}")
+async def delete_code(id: int):
+    return delete_code_controller(id)
