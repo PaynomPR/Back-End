@@ -57,16 +57,16 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
     start = datetime.fromisoformat(str(start)).strftime("%Y-%m-%d")
     end = datetime.fromisoformat(str(end)).strftime("%Y-%m-%d")
     
-    all_times_query = session.query(Time, Employers).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(
+    all_times_query = session.query(Time, Employers,Period).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(
         Period.period_end >= start, Period.period_end <= end, Employers.company_id == company_id
     ).all()
 
-    employee_data = defaultdict(lambda: {'info': {}, 'payments': []})  # Changed structure
+    employee_data = defaultdict(lambda: {'info': {}, 'payments': [], 'total': 0})  # Changed structure
     grand_total = 0
 
-    for time_entry, employer in all_times_query:
+    for time_entry, employer , period in all_times_query:
         employee_id = employer.id
-
+        
         # Store employee info only once
         if 'nombre' not in employee_data[employee_id]['info']:  # Check if already added
             employee_data[employee_id]['info'] = {
@@ -75,18 +75,37 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
                 'number_ss': employer.social_security_number
             }
 
-        # Append *all* payment details for the employee within the date range
+        # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({
-            'regular_pay': time_entry.regular_pay,
+            "date": period.period_end,
+            'reg_pay': time_entry.regular_pay,
             'over_pay': time_entry.over_pay,
             'meal_pay': time_entry.meal_pay,
+            'sick_pay': time_entry.sick_pay,  # Added sick_pay
+            'holyday_pay': time_entry.holyday_pay, # Added holyday_pay
+            'vacation': time_entry.vacation_pay, # Added vacation_pay
             'medicare': time_entry.medicare,
             'inability': time_entry.inability,
-            # Add other desired fields here...
+            'Propinas': time_entry.tips,            
+            'bonus': time_entry.bonus,
+            'refund': time_entry.refund,
+            'others': time_entry.others,
+            'asume': time_entry.asume,
+            'aflac': time_entry.aflac,
+            'donation': time_entry.donation,
+            'commissions': time_entry.commissions,
+            'concessions': time_entry.concessions,
+            'secure_social': time_entry.secure_social,
+            'social_tips': time_entry.social_tips,
+            'tax_pr': time_entry.tax_pr,
+            
+            "total": time_entry.total_payment
+            # ... Add any other fields from the Time model as needed
         })
 
-        # Calculate grand total (if needed.  If not, remove this part)
-        grand_total += time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay # Add other amounts as required
+        employee_total = time_entry.total_payment  # Calculate total for this entry
+        employee_data[employee_id]['total'] += employee_total  # Add to employee's total
+        grand_total += time_entry.total_payment  # Use total_payment for the sum
 
 
     # Convert to a list for easier templating
@@ -101,50 +120,53 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
     print(employee_data)
     #plantilla html
     # Jinja2 Template (updated)
+    # Updated Jinja2 Template
     template_html = """
     <!DOCTYPE html>
     <html lang="es">
     <head>
-        <meta charset="UTF-8">
+      <meta charset="UTF-8">
         <title>Reporte de Pagos por Empleado</title>
-        <style>
-            body { font-family: sans-serif; }
-            .employee-section { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;}
-            .employee-name { font-weight: bold; margin-bottom: 5px; }
-            .payment-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            .payment-table th, .payment-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      <style>
+            @page { size: landscape; } /* Key change: Set page size to landscape */
+            body { font-family: sans-serif; font-size: 10px; } /* Smaller font size */
+            table { width: 100%; border-collapse: collapse; table-layout: fixed;} /* Fixed layout for better column distribution */
+            th, td { border: 1px solid #ddd; padding: 5px; text-align: left;  word-wrap: break-word; } /* Wrap text */
+            /* Add more styles here to control column widths, etc. as needed */
+            .employee-section { page-break-after: always; } /* Page break after each employee */
         </style>
     </head>
     <body>
         {% for employee in data %}
-        <div class="employee-section">
-            <div class="employee-name">{{ employee.info.nombre }} {{ employee.info.apellido }} ({{ employee.info.number_ss }})</div>
-            <table class="payment-table">
+                    <div class="employee-section">  <!-- Section for page breaks -->
+
+            <h3>{{ employee.info.nombre }} {{ employee.info.apellido }} ({{ employee.info.number_ss }})</h3>
+            <table>
                 <thead>
                     <tr>
-                        <th>Regular Amount</th>
-                        <th>Over Amount</th>
-                        <th>Meal Amount</th>
-                        <th>Medicare</th>
-                        <th>Inability</th>
-                        <!-- Add other headers -->
+                        {% for key in employee.payments[0].keys() %}  <!-- Dynamically create headers -->
+                            <th>{{ key.replace('_', ' ').title() }}</th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for payment in employee.payments %}
-                    <tr>
-                        <td>{{ payment.regular_pay }}</td>
-                        <td>{{ payment.over_pay }}</td>
-                        <td>{{ payment.meal_pay }}</td>
-                        <td>{{ payment.medicare }}</td>
-                        <td>{{ payment.inability }}</td>
-                        <!-- Add other payment data -->
-                    </tr>
+                        <tr>
+                            {% for value in payment.values() %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
+                            <p>Total Empleado: ${{ employee.total }}</p>  <!-- Employee Total -->
+
+           
+                        </div>
+
         {% endfor %}
+            <p>Total: ${{ total }}</p>  <!-- Grand Total-->
+
     </body>
     </html>
     """
