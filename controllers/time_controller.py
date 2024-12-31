@@ -26,57 +26,170 @@ time_router = APIRouter()
 
 
 def create_time_controller(time_data, employer_id):
-    try:
-        #mounth actuality
-        
 
-        employers = (
-            session.query(Employers)
-            .filter(Employers.id == employer_id)
-            .one_or_none()
+    employers = (
+        session.query(Employers)
+        .filter(Employers.id == employer_id)
+        .one_or_none()
+    )
+
+    old_vacation_time = 0
+    old_sick_time = 0
+
+    if not employers:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Usuario no encontrado"
         )
 
-        old_vacation_time = 0
-        old_sick_time = 0
-
+    accountant = (
+        session.query(Accountant)
+        .filter(Accountant.id == time_data.accountant_id)
+        .one_or_none()
+    )
+    
+    if not accountant:
         if not employers:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Usuario no encontrado"
-            )
-
-        accountant = (
-            session.query(Accountant)
-            .filter(Accountant.id == time_data.accountant_id)
-            .one_or_none()
-        )
+                detail=f"Contador no encontrada"
+            )        
         
-        if not accountant:
-            if not employers:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Contador no encontrada"
-                )        
+    #calculamos el total_payment
+    regular_time=time_data.regular_time,
+    over_time=time_data.over_time,
+    meal_time=time_data.meal_time,
+    regular_amount=employers.regular_time,
+    over_amount=employers.overtime,
+    meal_amount=employers.mealtime,
+    holiday_time=time_data.holiday_time,
+    sick_time=time_data.sick_time,
+    vacation_time=time_data.vacation_time,
+    commissions=time_data.commissions,
+    concessions=time_data.concessions,
+    
+    bonus=time_data.bonus,
+
+    others=time_data.others,
+    salary=time_data.salary,
+
+
+    inability=time_data.inability,
+    medicare=time_data.medicare,
+    secure_social=time_data.secure_social,
+    social_tips=time_data.social_tips,
+    tax_pr=time_data.tax_pr,
+    employer_id=employer_id,
+    period_id=time_data.period_id,
+    tips=time_data.tips,
+    is_deleted=False,
+    memo=time_data.memo
+
+    regular_time_minutes = time_to_minutes(time_data.regular_time)
+    over_time_minutes = time_to_minutes(time_data.over_time)
+    meal_time_minutes = time_to_minutes(time_data.meal_time)
+    holiday_time_minutes = time_to_minutes(time_data.holiday_time)
+    sick_time_minutes = time_to_minutes(time_data.sick_time)
+    vacation_time_minutes = time_to_minutes(time_data.vacation_time)
+
+    # Convertir montos a números decimales si es necesario
+    regular_amount = employers.regular_time
+    over_amount = employers.overtime
+    meal_amount = employers.mealtime
+
+    # Calculamos el total_payment
+    total_income = (
+        (regular_time_minutes * regular_amount / 60) +
+        (over_time_minutes * over_amount / 60) +
+        (meal_time_minutes * meal_amount / 60) +
+        (holiday_time_minutes * regular_amount / 60) +
+        (sick_time_minutes * regular_amount / 60) +
+        (vacation_time_minutes * regular_amount / 60)+
+        time_data.commissions +
+        time_data.concessions +
+        time_data.tips)
+
+    total_egress =(
+        time_data.choferil +
+        time_data.inability +
+        time_data.medicare +
+        time_data.secure_social +
+        time_data.social_tips +
+        time_data.tax_pr
+    )
+
+    total_payment = total_income - total_egress
+    withholdingValue = "0"
+    if (employers.retention_type == 1):
+        withholdingValue = employers.payment_percentage.replace("%", "");
+    else: 
+        count = 0;
+        amount = 0;
+        if (employers.period_norma == "1"):
+            count = 52;
+        
+        if (employers.period_norma == "2"):
+            count = 26;
+        
+        if (employers.period_norma == "4"):
+            count = 12;
+        
+        amount = total_income * count;
+
+        if (amount <= 12500):
+            withholdingValue = "0"
+        if (amount > 12500 and amount <= 25000):
+            withholdingValue = "7"
             
-        #calculamos el total_payment
+        
+        if (amount > 25000 and amount <= 41500):
+            withholdingValue = "14"
+            
+        
+        if (amount > 41500 and amount <= 61500):
+            withholdingValue = "25"
+                    
+        
+        if (amount > 66000):
+            withholdingValue = "33"
+            
+    
+    
+        
+
+    time_query = Time(
+
+        regular_pay=time_data.regular_pay,
+        over_pay=time_data.overtime_pay,
+        meal_pay=time_data.meal_time_pay,
+        sick_pay=time_data.sick_pay,
+        holyday_pay=time_data.holyday_pay,  
+        vacation_pay = time_data.vacation_pay,          
+        employer_retained = withholdingValue,
         regular_time=time_data.regular_time,
         over_time=time_data.over_time,
         meal_time=time_data.meal_time,
         regular_amount=employers.regular_time,
         over_amount=employers.overtime,
         meal_amount=employers.mealtime,
+        hours_worked_salary = employers.work_hours,
+        refund=time_data.refund,
+        donation=time_data.donation,
+        asume=time_data.asume,
+        aflac=time_data.aflac,
+        accountant_id=time_data.accountant_id,
+
         holiday_time=time_data.holiday_time,
         sick_time=time_data.sick_time,
         vacation_time=time_data.vacation_time,
         commissions=time_data.commissions,
         concessions=time_data.concessions,
-        
-        bonus=time_data.bonus,
-
-        others=time_data.others,
         salary=time_data.salary,
 
+        others=time_data.others,
+        bonus=time_data.bonus,
 
+        choferil=time_data.choferil,
         inability=time_data.inability,
         medicare=time_data.medicare,
         secure_social=time_data.secure_social,
@@ -86,201 +199,80 @@ def create_time_controller(time_data, employer_id):
         period_id=time_data.period_id,
         tips=time_data.tips,
         is_deleted=False,
-        memo=time_data.memo
-
-        regular_time_minutes = time_to_minutes(time_data.regular_time)
-        over_time_minutes = time_to_minutes(time_data.over_time)
-        meal_time_minutes = time_to_minutes(time_data.meal_time)
-        holiday_time_minutes = time_to_minutes(time_data.holiday_time)
-        sick_time_minutes = time_to_minutes(time_data.sick_time)
-        vacation_time_minutes = time_to_minutes(time_data.vacation_time)
-
-        # Convertir montos a números decimales si es necesario
-        regular_amount = employers.regular_time
-        over_amount = employers.overtime
-        meal_amount = employers.mealtime
-
-        # Calculamos el total_payment
-        total_income = (
-            (regular_time_minutes * regular_amount / 60) +
-            (over_time_minutes * over_amount / 60) +
-            (meal_time_minutes * meal_amount / 60) +
-            (holiday_time_minutes * regular_amount / 60) +
-            (sick_time_minutes * regular_amount / 60) +
-            (vacation_time_minutes * regular_amount / 60)+
-            time_data.commissions +
-            time_data.concessions +
-            time_data.tips)
-
-        total_egress =(
-            time_data.choferil +
-            time_data.inability +
-            time_data.medicare +
-            time_data.secure_social +
-            time_data.social_tips +
-            time_data.tax_pr
+        memo=time_data.memo,
+        total_payment = total_payment
         )
 
-        total_payment = total_income - total_egress
-        withholdingValue = "0"
-        if (employers.retention_type == 1):
-            withholdingValue = employers.payment_percentage.replace("%", "");
-        else: 
-            count = 0;
-            amount = 0;
-            if (employers.period_norma == "1"):
-                count = 52;
-            
-            if (employers.period_norma == "2"):
-                count = 26;
-            
-            if (employers.period_norma == "4"):
-                count = 12;
-            
-            amount = total_income * count;
+    session.add(time_query)
+    session.commit()
+    session.refresh(time_query)
+    _year = time_query.period.period_start.year
+    month = time_query.period.period_start.month
 
-            if (amount <= 12500):
-                withholdingValue = "0"
-            if (amount > 12500 and amount <= 25000):
-                withholdingValue = "7"
-               
-            
-            if (amount > 25000 and amount <= 41500):
-                withholdingValue = "14"
-                
-            
-            if (amount > 41500 and amount <= 61500):
-                withholdingValue = "25"
-                      
-            
-            if (amount > 66000):
-                withholdingValue = "33"
-               
-        
-        
-            
+    #actualizar horas de vaciones y de enfermedad de el empleado
+    """ if time_data.vacation_time:
+        current_vacation_time = time_to_minutes(employers.vacation_time)
+        new_vacation_time = time_to_minutes(time_data.vacation_time)
+        employers.vacation_time = minutes_to_time(current_vacation_time + new_vacation_time)
 
-        time_query = Time(
+    if time_data.sick_time:
+        current_sick_time = time_to_minutes(employers.sick_time)
+        new_sick_time = time_to_minutes(time_data.sick_time)
+        employers.sick_time = minutes_to_time(current_sick_time + new_sick_time)
+    """
 
-            regular_pay=time_data.regular_pay,
-            over_pay=time_data.overtime_pay,
-            meal_pay=time_data.meal_time_pay,
-            sick_pay=time_data.sick_pay,
-            holyday_pay=time_data.holyday_pay,  
-            vacation_pay = time_data.vacation_pay,          
-            employer_retained = withholdingValue,
-            regular_time=time_data.regular_time,
-            over_time=time_data.over_time,
-            meal_time=time_data.meal_time,
-            regular_amount=employers.regular_time,
-            over_amount=employers.overtime,
-            meal_amount=employers.mealtime,
-            hours_worked_salary = employers.work_hours,
-            refund=time_data.refund,
-            donation=time_data.donation,
-            asume=time_data.asume,
-            aflac=time_data.aflac,
-            accountant_id=time_data.accountant_id,
-
-            holiday_time=time_data.holiday_time,
-            sick_time=time_data.sick_time,
-            vacation_time=time_data.vacation_time,
-            commissions=time_data.commissions,
-            concessions=time_data.concessions,
-            salary=time_data.salary,
-
-            others=time_data.others,
-            bonus=time_data.bonus,
-
-            choferil=time_data.choferil,
-            inability=time_data.inability,
-            medicare=time_data.medicare,
-            secure_social=time_data.secure_social,
-            social_tips=time_data.social_tips,
-            tax_pr=time_data.tax_pr,
-            employer_id=employer_id,
-            period_id=time_data.period_id,
-            tips=time_data.tips,
-            is_deleted=False,
-            memo=time_data.memo,
-            total_payment = total_payment
-            )
-
-        session.add(time_query)
-        session.commit()
-        session.refresh(time_query)
-        year = time_query.period.period_start.year
-        month = time_query.period.period_start.month
-
-        #actualizar horas de vaciones y de enfermedad de el empleado
-        """ if time_data.vacation_time:
-            current_vacation_time = time_to_minutes(employers.vacation_time)
-            new_vacation_time = time_to_minutes(time_data.vacation_time)
-            employers.vacation_time = minutes_to_time(current_vacation_time + new_vacation_time)
-
-        if time_data.sick_time:
-            current_sick_time = time_to_minutes(employers.sick_time)
-            new_sick_time = time_to_minutes(time_data.sick_time)
-            employers.sick_time = minutes_to_time(current_sick_time + new_sick_time)
-        """
-
-        
+    
 
 
-     
+    
 
-        
-        
-        times = session.query(Time).filter(Time.employer_id == time_query.employer_id).join(Period).filter(
-                Period.id == Time.period_id,
-                Period.year == year,
-                extract('month', Period.period_start) == month
-            ).all()
+    
+    
+    times = session.query(Time).filter(Time.employer_id == time_query.employer_id).join(Period).filter(
+            Period.id == Time.period_id,
+            Period.year == _year,
+            extract('month', Period.period_start) == month
+        ).all()
 
-        
+    
 
-        update_vaction_time(employer_id,times, employers,  year,month,time_query)
-        update_sicks_time(employer_id,times,employers, year, month,time_query)
-        
+    update_vaction_time(employer_id,times, employers,  _year,month,time_query)
+    update_sicks_time(employer_id,times,employers, _year, month,time_query)
+    
 
-        session.commit()
-        session.refresh(time_query)
+    session.commit()
+    session.refresh(time_query)
 
-        for item in time_data.payment:
-            is_active =  item.is_active
-            if (item.required == 2):
-                is_active = True
-            payment_query = Payments(
-                name=item.name,
-                amount=item.amount,
-                value=item.value,
-                taxe_id = item.id,
-                time_id=time_query.id,
-                is_active=is_active,
-                required=item.required,
-                type_taxe=item.type_taxe,
-                type_amount=item.type_amount,
-            )
-            session.add(payment_query)
-            session.commit()
-            
-        if month == 12:
-            new_period = session(Period).filter(year == year + 1).first()
-            if not new_period:
-                create_weekly_periods(year + 1)
-                create_biweekly_periods(year + 1)
-                create_monthly_periods(year + 1)
-            
-        
-        return {"ok": True, "msg": "El tiempo se creó con éxito", "result": {"time": time_query} }
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Se ha producido un error {str(e)}"
+    for item in time_data.payment:
+        is_active =  item.is_active
+        if (item.required == 2):
+            is_active = True
+        payment_query = Payments(
+            name=item.name,
+            amount=item.amount,
+            value=item.value,
+            taxe_id = item.id,
+            time_id=time_query.id,
+            is_active=is_active,
+            required=item.required,
+            type_taxe=item.type_taxe,
+            type_amount=item.type_amount,
         )
-    finally:
-        session.close()
+        session.add(payment_query)
+        session.commit()
+    
+    """ if int(month) == 12:
+        new_period = session.query(Period).filter(Period.year == _year + 1).first()
+        print("-----------new_period-----------")
+        print(new_period)
+        if not new_period:
+            create_weekly_periods(_year + 1)
+            create_biweekly_periods(_year + 1)
+            create_monthly_periods(_year + 1) """
+        
+    
+    return {"ok": True, "msg": "El tiempo se creó con éxito", "result": {"time": time_query} }
+    
 
 def get_time_by_employer_id_controller(employer_id):
     try:

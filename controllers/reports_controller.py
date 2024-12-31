@@ -54,159 +54,106 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             detail="Compañoa no encontrada"
         )
     
-    start = datetime.datetime.fromisoformat(str(start)).strftime("%Y-%m-%d")
-    end = datetime.datetime.fromisoformat(str(end)).strftime("%Y-%m-%d")
+    start = datetime.fromisoformat(str(start)).strftime("%Y-%m-%d")
+    end = datetime.fromisoformat(str(end)).strftime("%Y-%m-%d")
     
     all_times_query = session.query(Time, Employers).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(
         Period.period_end >= start, Period.period_end <= end, Employers.company_id == company_id
     ).all()
 
-    employee_data = []
-    total_wages = 0  # Initialize total wages
-    totals_wages = defaultdict(int)
-
-    employee_totals = defaultdict(lambda: defaultdict(float))  # Store totals per employee and wage type
-
+    employee_data = defaultdict(lambda: {'info': {}, 'payments': []})  # Changed structure
+    grand_total = 0
 
     for time_entry, employer in all_times_query:
         employee_id = employer.id
 
-        employee_totals[employee_id]['nombre'] = employer.first_name
-        employee_totals[employee_id]['apellido'] = employer.last_name
+        # Store employee info only once
+        if 'nombre' not in employee_data[employee_id]['info']:  # Check if already added
+            employee_data[employee_id]['info'] = {
+                'nombre': employer.first_name,
+                'apellido': employer.last_name,
+                'number_ss': employer.social_security_number
+            }
+
+        # Append *all* payment details for the employee within the date range
+        employee_data[employee_id]['payments'].append({
+            'regular_pay': time_entry.regular_pay,
+            'over_pay': time_entry.over_pay,
+            'meal_pay': time_entry.meal_pay,
+            'medicare': time_entry.medicare,
+            'inability': time_entry.inability,
+            # Add other desired fields here...
+        })
+
+        # Calculate grand total (if needed.  If not, remove this part)
+        grand_total += time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay # Add other amounts as required
 
 
-        employee_totals[employee_id]["Total"] += (time_entry.regular_pay+time_entry.salary + time_entry.over_pay + time_entry.meal_pay + time_entry.holyday_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.donation+time_entry.tips+time_entry.aflac+time_entry.inability+time_entry.choferil+time_entry.social_tips+time_entry.asume+time_entry.concessions+time_entry.commissions+time_entry.bonus+time_entry.refund+time_entry.medicare+time_entry.secure_social+time_entry.tax_pr);
-        total_wages += time_entry.regular_pay+time_entry.salary + time_entry.over_pay + time_entry.meal_pay + time_entry.holyday_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.donation+time_entry.tips+time_entry.aflac+time_entry.inability+time_entry.choferil+time_entry.social_tips+time_entry.asume+time_entry.concessions+time_entry.commissions+time_entry.bonus+time_entry.refund+time_entry.medicare+time_entry.secure_social+time_entry.tax_pr
+    # Convert to a list for easier templating
+    employee_data_list = list(employee_data.values())
 
-
-    #Convert the defaultdict to a list of dictionaries
-    for employee_id, data in employee_totals.items():
-        employee_data.append(data)
 
     info = {
-        # ... (other info)
-        "data": employee_data,
-        "total": total_wages, # Use the calculated total wages
-        "totals_wages" : totals_wages,
-
+        "data": employee_data_list,
+        "total": grand_total,
     }
+    print("---------------------employee_data-------------------------------")
+    print(employee_data)
     #plantilla html
+    # Jinja2 Template (updated)
     template_html = """
-
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Reporte Planilla CFSE</title>
-            <style>
-                @page {
-                    size: A4 landscape; /* Configura la página en orientación horizontal */
-                    margin: 20mm;
-                }
-
-                body {
-                    font-family: Arial, sans-serif;
-                    margin: 20px;
-                }
-
-                .header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                }
-
-                .header h1, .header h2 {
-                    margin: 0;
-                }
-
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 20px;
-                }
-
-                table, th, td {
-                    border: 1px solid black;
-                }
-
-                th, td {
-                    padding: 8px;
-                    text-align: left;
-                }
-
-                th {
-                    background-color: #f2f2f2;
-                    font-size: 10px;
-                }
-
-                .total-row {
-                    font-weight: bold;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h4>{{ employer_name }}</h4>
-                <h4>Número de Registro: {{ commercial_register }}</h4>
-                <h4>Teléfono: {{ telefono }}</h4>
-            </div>
-
-            <table>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Reporte de Pagos por Empleado</title>
+        <style>
+            body { font-family: sans-serif; }
+            .employee-section { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;}
+            .employee-name { font-weight: bold; margin-bottom: 5px; }
+            .payment-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .payment-table th, .payment-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        </style>
+    </head>
+    <body>
+        {% for employee in data %}
+        <div class="employee-section">
+            <div class="employee-name">{{ employee.info.nombre }} {{ employee.info.apellido }} ({{ employee.info.number_ss }})</div>
+            <table class="payment-table">
                 <thead>
                     <tr>
-                        <th>NOMBRE</th>
-                        <th>APELLIDO</th>
-                        <th>NUMERO SS</th>
-                        <th>HORAS TRABAJADAS</th>
-                        <th>4Q PASADO</th>
-                        <th>1Q </th>
-                        <th>2Q</th>
-                        <th>3Q</th>
-                        <th>TOTAL SALARIOS</th>
-                        <th>BONO</th>
+                        <th>Regular Amount</th>
+                        <th>Over Amount</th>
+                        <th>Meal Amount</th>
+                        <th>Medicare</th>
+                        <th>Inability</th>
+                        <!-- Add other headers -->
                     </tr>
                 </thead>
                 <tbody>
-                    {% for employee in data %}
-        <tr>
-            <td>{{ employee.nombre }}</td>
-            <td>{{ employee.apellido }}</td>
-            <td>{{ employee.number_ss }}</td>
-            <td>{{ employee.worked_hour }}</td>
-            <td>{{ employee.trimestre_1  }}</td>
-            <td>{{ employee.trimestre_2  }}</td>
-            <td>{{ employee.trimestre_3  }}</td>
-            <td>{{ employee.trimestre_4  }}</td>
-            <td>{{ employee.Total }}</td>
-            <td>{{ employee.bonus }}</td>
-        </tr>
-        {% endfor %}
-        <tr>
-    <td>TOTALES</td>
-    <td>---------</td>
-    <td>---------</td>
-   
-    <td>{{ totals_wages.totals_1 }}</td>
-    <td>{{ totals_wages.totals_2 }}</td>
-    <td>{{ totals_wages.totals_3 }}</td>
-    <td>{{ totals_wages.totals_4 }}</td>
-    <td>{{ total }}</td>
-    
-</tr>
-                    
+                    {% for payment in employee.payments %}
+                    <tr>
+                        <td>{{ payment.regular_pay }}</td>
+                        <td>{{ payment.over_pay }}</td>
+                        <td>{{ payment.meal_pay }}</td>
+                        <td>{{ payment.medicare }}</td>
+                        <td>{{ payment.inability }}</td>
+                        <!-- Add other payment data -->
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-        </body>
-        </html>
-
-
+        </div>
+        {% endfor %}
+    </body>
+    </html>
     """
 
     template = Template(template_html)
     rendered_html = template.render(info)
 
     # Generar el PDF usando WeasyPrint
-    pdf_file = "pdf_cfse.pdf"
+    pdf_file = "pdf_wage.pdf"
     HTML(string=rendered_html).write_pdf(pdf_file)
 
     return FileResponse(

@@ -48,7 +48,8 @@ async def send_email_async(subject: str, email_to: str, body: dict):
     await fm.send_message(message, template_name='email.html')
 
 def send_email_background(background_tasks: BackgroundTasks, subject: str, email_to: str, body: dict):
-   
+    url = os.getenv('URL')  # Get the URL from environment variables
+    body['url'] = url      # Add the URL to the body dictionary
     message = MessageSchema(
         subject=subject,
         recipients=[email_to],
