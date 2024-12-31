@@ -228,7 +228,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
                     func.sum(Time.medicare).label("total_medicare"),
                     func.sum(Time.secure_social).label("total_ss"),
                     func.sum(Time.tax_pr).label("total_tax_pr")).select_from(Period).join(Time, Period.id == Time.period_id and Time.employer_id == employer_id
-                    ).filter(Period.year == year,Time.employer_id == employer_id,Period.period_end >= date_start,Period.period_end <= time_period_query.Period.period_end,Time.employer_id == employer_id
+                    ).filter(Time.employer_id == employer_id,Period.period_end >= date_start,Period.period_end <= time_period_query.Period.period_end,Time.employer_id == employer_id
                     ).group_by(Period.year).all()
 
 
@@ -269,7 +269,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
             regular_hours, regular_minutes = map(int, regular_time.split(':'))
 
             # Convertir a segundos
-            regular_total_seconds = regular_hours + hours_worked_salary * 3600 + regular_minutes * 60
+            regular_total_seconds = ((regular_hours + hours_worked_salary) * 3600) + (regular_minutes * 60)
 
             # Convertir la cadena a horas y minutos
             over_hours, over_minutes = map(int, over_time.split(':'))
