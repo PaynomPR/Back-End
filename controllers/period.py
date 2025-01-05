@@ -29,7 +29,7 @@ def create_periods(periods_data: list[dict]) -> list[Period]:
 
 def create_weekly_periods(year: int) -> list[Period]:
     try:
-        last_period = session.query(Period).filter(Period.year == year).order_by(Period.period_end.desc()).first()
+        last_period = session.query(Period).filter(Period.year == year, Period.period_type == PeriodType.WEEKLY).order_by(Period.period_end.desc()).first()
 
         if last_period:
             start_date = last_period.period_end + timedelta(days=1)
@@ -94,22 +94,41 @@ def create_biweekly_periods(year: int) -> list[Period]:
         session.close()
 
 def create_monthly_periods(year: int) -> list[Period]:
-    from datetime import date, timedelta
-    periods = []
-    for month in range(1, 13):
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year, 12, 31)
+    try:
+        last_period = session.query(Period).filter(Period.year == year, Period.period_type == PeriodType.MONTHLY).order_by(Period.period_end.desc()).first()
+
+        if last_period:
+            start_date = last_period.period_end + timedelta(days=1)
+            start_month = start_date.month 
         else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
-        periods.append({
-            "year": year,
-            "period_number": month,
-            "period_start": start_date,
-            "period_end": end_date,
-            "period_type": PeriodType.MONTHLY
-        })
-    return create_periods(periods)
+            start_date = date(year, 1, 1)
+            start_month = 1
+
+        periods = []
+        for month in range(start_month, 13):  
+            start_date = date(year, month, 1)
+            if month == 12:
+                end_date = date(year, 12, 31)
+            else:
+                end_date = date(year, month + 1, 1) - timedelta(days=1)
+            periods.append({
+                "year": year,
+                "period_number": (last_period.period_number if last_period else 0) + len(periods) + 1,
+                "period_start": start_date,
+                "period_end": end_date,
+                "period_type": PeriodType.MONTHLY
+            })
+
+        return create_periods(periods)
+
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Se ha producido un error {str(e)}"
+        )
+    finally:
+        session.close()
 
 
 def get_all_periods_controller()-> list[PeriodRead]:
