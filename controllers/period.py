@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from database.config import session
 from models.periods import Period, PeriodType
 from schemas.period import PeriodRead
+from datetime import date, timedelta
 
 
 
@@ -27,40 +28,70 @@ def create_periods(periods_data: list[dict]) -> list[Period]:
         session.close()
 
 def create_weekly_periods(year: int) -> list[Period]:
-    from datetime import date, timedelta
-    periods = []
-    start_date = date(year, 1, 1)
-    while start_date.year == year:
-        end_date = start_date + timedelta(days=6)
-        if end_date.year != year:
-            end_date = date(year, 12, 31)
-        periods.append({
-            "year": year,
-            "period_number": len(periods) + 1,
-            "period_start": start_date,
-            "period_end": end_date,
-            "period_type": PeriodType.WEEKLY
-        })
-        start_date = end_date + timedelta(days=1)
-    return create_periods(periods)
+    try:
+        last_period = session.query(Period).filter(Period.year == year).order_by(Period.period_end.desc()).first()
+
+        if last_period:
+            start_date = last_period.period_end + timedelta(days=1)
+        else:
+            start_date = date(year, 1, 1)
+
+        periods = []
+        while start_date.year == year:
+            end_date = start_date + timedelta(days=6)
+            if end_date.year != year:
+                end_date = date(year, 12, 31)
+            periods.append({
+                "year": year,
+                "period_number": (last_period.period_number if last_period else 0) + len(periods) + 1,
+                "period_start": start_date,
+                "period_end": end_date,
+                "period_type": PeriodType.WEEKLY
+            })
+            start_date = end_date + timedelta(days=1)
+        return create_periods(periods)  # Assuming create_periods function exists as in the original code
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Se ha producido un error {str(e)}")
+    finally:
+        session.close()
+
 
 def create_biweekly_periods(year: int) -> list[Period]:
-    from datetime import date, timedelta
-    periods = []
-    start_date = date(year, 1, 1)
-    while start_date.year == year:
-        end_date = start_date + timedelta(days=13)
-        if end_date.year != year:
-            end_date = date(year, 12, 31)
-        periods.append({
-            "year": year,
-            "period_number": len(periods) + 1,
-            "period_start": start_date,
-            "period_end": end_date,
-            "period_type": PeriodType.BIWEEKLY
-        })
-        start_date = end_date + timedelta(days=1)
-    return create_periods(periods)
+    try:
+        last_period = session.query(Period).filter(Period.year == year, Period.period_type == PeriodType.BIWEEKLY).order_by(Period.period_end.desc()).first()
+
+        if last_period:
+            start_date = last_period.period_end + timedelta(days=1)
+        else:
+            start_date = date(year, 1, 1)
+
+        periods = []
+        while start_date.year == year:
+            end_date = start_date + timedelta(days=13)
+            if end_date.year != year:
+                end_date = date(year, 12, 31)
+            periods.append({
+                "year": year,
+                "period_number": (last_period.period_number if last_period else 0) + len(periods) + 1,
+                "period_start": start_date,
+                "period_end": end_date,
+                "period_type": PeriodType.BIWEEKLY
+            })
+            start_date = end_date + timedelta(days=1)
+
+        return create_periods(periods)
+
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Se ha producido un error {str(e)}"
+        )
+    finally:
+        session.close()
 
 def create_monthly_periods(year: int) -> list[Period]:
     from datetime import date, timedelta
@@ -94,6 +125,14 @@ def get_all_periods_controller()-> list[PeriodRead]:
     finally:
         session.close()
 
+def generate_periods_controller(_year: int = None):   
+    
+    
+    
+    create_weekly_periods(_year)
+    create_biweekly_periods(_year)
+    create_monthly_periods(_year) 
+    return {"ok": False, "msg": "Periodos generados", "result": None}
 
 def get_periods_by_year_and_type_controller(year: int, period_type: PeriodType) -> list[PeriodRead]:
     try:

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from controllers.period import create_weekly_periods, create_biweekly_periods, create_monthly_periods, get_all_periods_controller, get_periods_by_year_and_type_controller
+from controllers.period import create_weekly_periods,generate_periods_controller, create_biweekly_periods, create_monthly_periods, get_all_periods_controller, get_periods_by_year_and_type_controller
 from models.periods import PeriodType
 from schemas.period import PeriodCreate, PeriodRead
 
@@ -17,6 +17,13 @@ def create_biweekly_periods_route(year: int):
 @period_routes.post("/monthly/", response_model=list[PeriodRead])
 def create_monthly_periods_route(year: int):
     return create_monthly_periods(year)
+
+
+
+### get all periods 
+@period_routes.get("/generate/period/{year}", response_model=list[PeriodRead])
+def get_all_period(year: int):
+    return generate_periods_controller(year)
 
 ### get all periods 
 @period_routes.get("/periods", response_model=list[PeriodRead])
