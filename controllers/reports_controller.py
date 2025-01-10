@@ -78,28 +78,28 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
         # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({
             "date": period.period_end,
-            'reg_pay': time_entry.regular_pay,
-            'over_pay': time_entry.over_pay,
-            'meal_pay': time_entry.meal_pay,
-            'sick_pay': time_entry.sick_pay,  # Added sick_pay
-            'holyday_pay': time_entry.holyday_pay, # Added holyday_pay
-            'vacation': time_entry.vacation_pay, # Added vacation_pay
-            'medicare': time_entry.medicare,
-            'inability': time_entry.inability,
-            'Propinas': time_entry.tips,            
-            'bonus': time_entry.bonus,
-            'refund': time_entry.refund,
-            'others': time_entry.others,
-            'asume': time_entry.asume,
-            'aflac': time_entry.aflac,
-            'donation': time_entry.donation,
-            'commissions': time_entry.commissions,
-            'concessions': time_entry.concessions,
-            'secure_social': time_entry.secure_social,
-            'social_tips': time_entry.social_tips,
-            'tax_pr': time_entry.tax_pr,
-            
-            "total": time_entry.total_payment
+            'reg_pay': round(time_entry.regular_pay,2),
+            'over_pay': round(time_entry.over_pay,2),
+            'meal_pay': round(time_entry.meal_pay,2),
+            'sick_pay': round(time_entry.sick_pay,2),  
+            'holyday_pay': round(time_entry.holyday_pay,2), 
+            'vacation': round(time_entry.vacation_pay,2), 
+            'medicare': round(time_entry.medicare,2),
+            'inability': round(time_entry.inability,2),
+            'Propinas': round(time_entry.tips,2),
+            'bonus': round(time_entry.bonus,2),
+            'refund': round(time_entry.refund,2),
+            'others': round(time_entry.others,2),
+            'asume': round(time_entry.asume,2),
+            'aflac': round(time_entry.aflac,2),
+            'donation': round(time_entry.donation,2),
+            'commissions': round(time_entry.commissions,2),
+            'concessions': round(time_entry.concessions,2),
+            'secure_social': round(time_entry.secure_social,2),
+            'social_tips': round(time_entry.social_tips,2),
+            'tax_pr': round(time_entry.tax_pr,2),
+            'choferil': round(time_entry.choferil,2),
+            "total": round(time_entry.total_payment,2),
             # ... Add any other fields from the Time model as needed
         })
 
@@ -108,65 +108,108 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
         grand_total += time_entry.total_payment  # Use total_payment for the sum
 
 
-    # Convert to a list for easier templating
-    employee_data_list = list(employee_data.values())
+    # Prepare data for templating (including totals)
+    employee_data_list = []
+    for employee_id, data in employee_data.items():
+        employee_totals = defaultdict(int)  # Totals for this employee
+        for payment in data['payments']:
+            for key, value in payment.items():
+                if key != "date" and isinstance(value, (int, float, Decimal)):
+                    employee_totals[key] += round(value,2)
 
+        # Check for columns with all zeros and exclude them
+        non_zero_keys = [key for key, value in employee_totals.items() if value != 0 and key != "date"]
+        data['totals'] = {k: v for k, v in employee_totals.items() if k in non_zero_keys}
+        data['payments'] = [
+            {k: v for k, v in payment.items() if k in non_zero_keys or k == "date"}
+            for payment in data['payments']
+        ]
+        employee_data_list.append(data)
+
+
+    grand_totals = defaultdict(int)  # Totals for all employees
+
+    for employee in employee_data_list: # Calculate grand totals from each employee total.
+        for key, value in employee["totals"].items():
+             grand_totals[key] += round(value,2)
+                
+    grand_totals = {k: v for k, v in grand_totals.items() if v != 0} # Filters out the zero columns
 
     info = {
         "data": employee_data_list,
-        "total": grand_total,
+        "grand_totals": grand_totals,  # Add grand totals to the template context
     }
-    print("---------------------employee_data-------------------------------")
-    print(employee_data)
-    #plantilla html
-    # Jinja2 Template (updated)
-    # Updated Jinja2 Template
-    template_html = """
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-        <title>Reporte de Pagos por Empleado</title>
-      <style>
-            @page { size: landscape; } /* Key change: Set page size to landscape */
-            body { font-family: sans-serif; font-size: 10px; } /* Smaller font size */
-            table { width: 100%; border-collapse: collapse; table-layout: fixed;} /* Fixed layout for better column distribution */
-            th, td { border: 1px solid #ddd; padding: 5px; text-align: left;  word-wrap: break-word; } /* Wrap text */
-            /* Add more styles here to control column widths, etc. as needed */
-            .employee-section { page-break-after: always; } /* Page break after each employee */
-        </style>
-    </head>
-    <body>
-        {% for employee in data %}
-                    <div class="employee-section">  <!-- Section for page breaks -->
 
+    
+    
+    # Jinja2 Template (Corrected for consistent two decimal formatting)
+    template_html = """
+ <!DOCTYPE html>
+ <html lang="es">
+ <head>
+   <style>
+    @page { size: landscape; }
+    body { font-family: sans-serif; font-size: 10px; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { border: 1px solid #ddd; padding: 5px; text-align: left; word-wrap: break-word;}
+
+    .employee-section { 
+        page-break-inside: avoid; /* Prevents breaking an employee section across pages */
+    }
+</style>
+ </head>
+ <body>
+     {% for employee in data %}
+        <div class="employee-section">
             <h3>{{ employee.info.nombre }} {{ employee.info.apellido }} ({{ employee.info.number_ss }})</h3>
             <table>
                 <thead>
                     <tr>
-                        {% for key in employee.payments[0].keys() %}  <!-- Dynamically create headers -->
+                        {% for key in employee.payments[0].keys() if key != "total" and grand_totals.get(key, 0) != 0 %}
                             <th>{{ key.replace('_', ' ').title() }}</th>
                         {% endfor %}
+                        <th>Total</th>  <!-- Added total header-->
                     </tr>
                 </thead>
                 <tbody>
                     {% for payment in employee.payments %}
                         <tr>
-                            {% for value in payment.values() %}
-                                <td>{{ value }}</td>
+                            {% for key, value in payment.items() if key != "total" and grand_totals.get(key, 0) != 0 %}
+                                <td>{{ "{:.2f}".format(value) }}</td> <!-- Format here -->
                             {% endfor %}
+                            <td>{{ "{:.2f}".format(payment.total) }}</td>  <!-- Total for each payment line-->
                         </tr>
                     {% endfor %}
-                </tbody>
+                    <tr>  <!-- Totals row for each employee-->
+                       <td>Totals</td>
+                        {% for key, value in employee.totals.items() if key != "total" and grand_totals.get(key, 0) != 0 %}
+                           <td>{{ "{:.2f}".format(value) }}</td>  <!--Format here-->
+                         {% endfor %}
+                         <td>{{ "{:.2f}".format(employee.total) }}</td>  <!-- total value -->
+                    <tr>
+                 </tbody>
             </table>
-                            <p>Total Empleado: ${{ employee.total }}</p>  <!-- Employee Total -->
-
-           
-                        </div>
-
-        {% endfor %}
-            <p>Total: ${{ total }}</p>  <!-- Grand Total-->
-
+         </div>
+     {% endfor %}
+    <h3>Totales</h3>
+     <table>
+         <thead>
+             <tr>
+                  {% for key in grand_totals if key != "total" %}
+                    <th>{{ key.replace('_', ' ').title() }}</th>
+                    {% endfor %}
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    {% for key, value in grand_totals.items() if key != "total" %}
+                        <td>{{ "{:.2f}".format(value) }}</td>  <!-- Format here -->
+                    {% endfor %}
+                    <td>{{ "{:.2f}".format(grand_totals.total) }}</td> <!-- total value -->
+                </tr>
+            </tbody>
+        </table>  
     </body>
     </html>
     """

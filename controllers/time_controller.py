@@ -105,7 +105,7 @@ def create_time_controller(time_data, employer_id):
         (holiday_time_minutes * regular_amount / 60) +
         (sick_time_minutes * regular_amount / 60) +
         (vacation_time_minutes * regular_amount / 60)+
-        time_data.commissions +
+        time_data.commissions + time_data.salary +
         time_data.concessions +
         time_data.tips)
 
