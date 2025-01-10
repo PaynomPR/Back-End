@@ -85,16 +85,15 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             'holyday_pay': round(time_entry.holyday_pay,2), 
             'vacation': round(time_entry.vacation_pay,2), 
             'medicare': round(time_entry.medicare,2),
-            'inability': round(time_entry.inability,2),
+            'disability': round(time_entry.inability,2),
             'Propinas': round(time_entry.tips,2),
             'bonus': round(time_entry.bonus,2),
             'refund': round(time_entry.refund,2),
-            'others': round(time_entry.others,2),
+            
             'asume': round(time_entry.asume,2),
             'aflac': round(time_entry.aflac,2),
             'donation': round(time_entry.donation,2),
-            'commissions': round(time_entry.commissions,2),
-            'concessions': round(time_entry.concessions,2),
+           
             'secure_social': round(time_entry.secure_social,2),
             'social_tips': round(time_entry.social_tips,2),
             'tax_pr': round(time_entry.tax_pr,2),
@@ -118,10 +117,13 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
                     employee_totals[key] += round(value,2)
 
         # Check for columns with all zeros and exclude them
+        
         non_zero_keys = [key for key, value in employee_totals.items() if value != 0 and key != "date"]
-        data['totals'] = {k: v for k, v in employee_totals.items() if k in non_zero_keys}
+        data['totals'] = {k: v for k, v in employee_totals.items() if k in non_zero_keys or k == "date"} #always include date in totals
+
         data['payments'] = [
-            {k: v for k, v in payment.items() if k in non_zero_keys or k == "date"}
+            {k: v for k, v in payment.items() if k in non_zero_keys or k == "date" or k == "total"} #always include date and total
+
             for payment in data['payments']
         ]
         employee_data_list.append(data)
@@ -165,24 +167,30 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             <table>
                 <thead>
                     <tr>
-                        {% for key in employee.payments[0].keys() if key != "total" and grand_totals.get(key, 0) != 0 %}
+                         {% if "date" in employee.payments[0] %}   <!-- Check if "date" exists -->
+                            <th>Date</th>  <!-- Always include Date header -->
+                        {% endif %}
+                        {% for key in employee.payments[0].keys() if key != "total" and key != "date" and grand_totals.get(key, 0) != 0 %}
                             <th>{{ key.replace('_', ' ').title() }}</th>
                         {% endfor %}
                         <th>Total</th>  <!-- Added total header-->
                     </tr>
                 </thead>
-                <tbody>
-                    {% for payment in employee.payments %}
-                        <tr>
-                            {% for key, value in payment.items() if key != "total" and grand_totals.get(key, 0) != 0 %}
-                                <td>{{ "{:.2f}".format(value) }}</td> <!-- Format here -->
-                            {% endfor %}
-                            <td>{{ "{:.2f}".format(payment.total) }}</td>  <!-- Total for each payment line-->
-                        </tr>
-                    {% endfor %}
+                 <tbody>
+                {% for payment in employee.payments %}
+                   <tr>
+                        {% if "date" in payment %}
+                            <td>{{ payment.date }}</td>  <!-- Always display the date -->
+                        {% endif %}
+                        {% for key, value in payment.items() if key != "total" and key != "date" and grand_totals.get(key, 0) != 0 %}
+                           <td>{{ "{:.2f}".format(value) }}</td> <!-- Format here -->
+                        {% endfor %}
+                        <td>{{ "{:.2f}".format(payment.total) }}</td>  <!-- Total for each payment line-->
+                     </tr>
+                {% endfor %}
                     <tr>  <!-- Totals row for each employee-->
                        <td>Totals</td>
-                        {% for key, value in employee.totals.items() if key != "total" and grand_totals.get(key, 0) != 0 %}
+                        {% for key, value in employee.totals.items() if key != "total" and key != "date" and grand_totals.get(key, 0) != 0 %}
                            <td>{{ "{:.2f}".format(value) }}</td>  <!--Format here-->
                          {% endfor %}
                          <td>{{ "{:.2f}".format(employee.total) }}</td>  <!-- total value -->
