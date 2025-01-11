@@ -98,7 +98,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             'social_tips': round(time_entry.social_tips,2),
             'tax_pr': round(time_entry.tax_pr,2),
             'choferil': round(time_entry.choferil,2),
-            "sub_totals": round(time_entry.total_payment,2),
+            "total": round(time_entry.total_payment,2),
             # ... Add any other fields from the Time model as needed
         })
 
@@ -189,7 +189,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
                      </tr>
                 {% endfor %}
                     <tr>  <!-- Totals row for each employee-->
-                       <td>Totals</td>
+                       <td>Sub Total</td>
                         {% for key, value in employee.totals.items() if key != "total" and key != "date" and grand_totals.get(key, 0) != 0 %}
                            <td>{{ "{:.2f}".format(value) }}</td>  <!--Format here-->
                          {% endfor %}
