@@ -239,7 +239,7 @@ def RTtxt(count,acum_total_20,acum_total_21,acum_total_22,acum_total_23,acum_tot
     acum_total_24 = round(acum_total_24 * 100)
     acum_total_24 = f"{acum_total_24:015d}"
       
-    return "RT"+count+add_to_right(text,30,"0")+acum_total_20+acum_total_21+acum_total_22+acum_total_23+acum_total_24+add_to_right(text,180,"0")+add_to_right(text,15,"0")+add_to_right(text,90,"0")+add_to_right(text,15,"0")+count+add_to_right(text,98," ")
+    return "RT"+count+add_to_right(text,30,"0")+acum_total_20+acum_total_21+acum_total_22+acum_total_23+acum_total_24+add_to_right(text,180,"0")+add_to_right(text,15,"0")+add_to_right(text,90,"0")+add_to_right(text,15,"0")+add_to_right(text,98," ")
 
 def RUtxt(count,acum_total_7,acum_total_8,acum_total_9,acum_total_10,acum_total_11,acum_total_13,acum_total_14):
     text = ""  
