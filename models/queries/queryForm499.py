@@ -19,12 +19,12 @@ def queryForm499(company_id, year, period):
     # Address Company
     postalAddressCompany = company.postal_address if company.postal_address is not None else ''
     statePostalAddressCompany = company.state_postal_addess if company.state_postal_addess is not None else ''
-    countryPostalAddressCompany = COUNTRY[int(company.country_postal_address)] if COUNTRY[int(company.country_postal_address)] is not None else ''
+    countryPostalAddressCompany = COUNTRY[int(company.country_postal_address)-2] if COUNTRY[int(company.country_postal_address)-2] is not None else ''
     zipcodePostalAddressCompany = company.zipcode_postal_address if company.zipcode_postal_address is not None else ''
 
     physicalAddressCompany = company.physical_address if company.physical_address is not None else ''
     statePhysicalAddressCompany = company.state_physical_address if company.state_physical_address is not None else ''
-    countryPhysicalAddressCompany = COUNTRY[int(company.country_physical_address)] if COUNTRY[int(company.country_physical_address)] is not None else ''
+    countryPhysicalAddressCompany = COUNTRY[int(company.country_physical_address)-2] if COUNTRY[int(company.country_physical_address)-2] is not None else ''
     zipcodePhysicalAddressCompany = company.zipcode_physical_address if company.zipcode_physical_address is not None else ''
 
     # Calculate
