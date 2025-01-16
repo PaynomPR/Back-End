@@ -213,7 +213,7 @@ def RStxt(employer,company,total_6,total_19,total_16,total_12,birthday):
     total_12 = round(total_12 * 100)
     total_12 = f"{total_12:011d}" 
     text = ""  
-    code = " "
+    code = "0"
     if (total_16 > 0):
         code = "E"
     total_16 = round(total_16 * 100)
