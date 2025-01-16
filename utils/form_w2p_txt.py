@@ -213,7 +213,7 @@ def RStxt(employer,company,total_6,total_19,total_16,total_12,birthday):
     total_12 = round(total_12 * 100)
     total_12 = f"{total_12:011d}" 
     text = ""  
-    code = "  "
+    code = " "
     if (total_16 > 0):
         code = "E"
     total_16 = round(total_16 * 100)
@@ -259,7 +259,7 @@ def RUtxt(count,acum_total_7,acum_total_8,acum_total_9,acum_total_10,acum_total_
     acum_total_14 = round(acum_total_14 * 100)
     acum_total_14 = f"{acum_total_14:015d}"
       
-    return "RU"+count+add_to_right(text,15,"0")+add_to_right(text,15,"0")+add_to_right(text,90,"0")+add_to_right(text,15," ")+add_to_right(text,210," ")+acum_total_7+acum_total_8+acum_total_9+acum_total_10+acum_total_11+acum_total_13+acum_total_14+add_to_right(text,30,"0")+add_to_right(text,23," ")
+    return "RU"+count+add_to_right(text,15,"0")+add_to_right(text,15,"0")+add_to_right(text,90,"0")+add_to_right(text,15," ")+add_to_right(text,210," ")+acum_total_7+acum_total_8+acum_total_9+acum_total_10+acum_total_11+acum_total_13+add_to_right(text,15,"0")+add_to_right(text,30,"0")+add_to_right(text,23," ")
 
 
 def RVtxt(count,company,acum_total_16,acum_total_6):
