@@ -95,8 +95,7 @@ def form_w2psse_txt_generator(company_id, year,resbmited = "1",resbmited_code = 
 
             n_control = company.w2_first_control
             total_20 = roundedAmount(roundedAmount(total_7)+ roundedAmount(rounded_amount_11)-roundedAmount(rounded_amount_tips))
-            print("----------------total_20------------------")
-            print(total_20)
+            
             acum_total_20 += roundedAmount(total_20)
             total_21 = roundedAmount(roundedAmount(rounded_amount_secures_social)+roundedAmount(rounded_amount_social_tips))
 
