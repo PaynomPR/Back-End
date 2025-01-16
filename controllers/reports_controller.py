@@ -493,7 +493,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
             return regular_pay * 52
 
     def calculate_income():
-        regu_pay = regular_pay(time_query.regular_amount, time_query.regular_time,time_query.salary,time_query.others,time_query.bonus)
+        regu_pay = round(regular_pay(time_query.regular_amount, time_query.regular_time,time_query.salary,time_query.others,time_query.bonus),2)
         overtime_pay = calculate_payment(time_query.over_time, time_query.over_amount)
         meal_time_pay= calculate_payment(time_query.meal_time, time_query.meal_amount)
         holiday_time_pay = calculate_payment(time_query.holiday_time, time_query.regular_amount)
