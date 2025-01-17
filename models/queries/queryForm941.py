@@ -85,7 +85,7 @@ def queryForm941(company_id, year, period):
         'topmostSubform[0]Page1[0]EntityArea[0]f1_3[0]': company.name, # Name company
         'topmostSubform[0]Page1[0]EntityArea[0]f1_4[0]': '', # Commercial name company
         'topmostSubform[0]Page1[0]EntityArea[0]f1_5[0]': company.postal_address, # Address company
-        'topmostSubform[0]Page1[0]EntityArea[0]f1_6[0]':  COUNTRY[int(company.country_postal_address)-2],
+        'topmostSubform[0]Page1[0]EntityArea[0]f1_6[0]':  COUNTRY[int(company.country_postal_address)-1],
         'topmostSubform[0]Page1[0]EntityArea[0]f1_7[0]': company.state_postal_addess, # State company
         'topmostSubform[0]Page1[0]EntityArea[0]f1_8[0]': company.zipcode_postal_address, # ZipCode company
         'topmostSubform[0]Page1[0]EntityArea[0]f1_9[0]': '', # Name country foreign
@@ -190,7 +190,7 @@ def queryForm941(company_id, year, period):
         'topmostSubform[0]Page3[0]Name_ReadOrder[0]f1_3[0]': company.name, # name company
         'topmostSubform[0]Page3[0]EIN_Number[0]f1_1[0]': ein_part_1, # identification ein part 1
         'topmostSubform[0]Page3[0]EIN_Number[0]f1_2[0]': ein_part_2, # identification ein part 2
-        'topmostSubform[0]Page3[0]Ciudad_ReadOrder[0]f3_36[0]': COUNTRY[int(account.country)-2],
+        'topmostSubform[0]Page3[0]Ciudad_ReadOrder[0]f3_36[0]': COUNTRY[int(account.country)-1],
    
     'topmostSubform[0]Page3[0]f3_31[0]': account.identidad_ssa,
     'topmostSubform[0]Page3[0]f3_33[0]': account.employer_insurance_number,
@@ -227,7 +227,7 @@ def queryForm941(company_id, year, period):
         'topmostSubform[0]Page3[0]f3_26[0]': personal_number_id, # pin irs
         'topmostSubform[0]Page3[0]f3_30[0]' : account.name + " "+ account.first_last_name,
         'topmostSubform[0]Page3[0]Direccion_ReadOrder[0]f3_34[0]' : account.address,
-        'topmostSubform[0]Page3[0]Ciudad_ReadOrder[0]f3_36[0]' : COUNTRY[int(account.country)-2],
+        'topmostSubform[0]Page3[0]Ciudad_ReadOrder[0]f3_36[0]' : COUNTRY[int(account.country)-1],
         'topmostSubform[0]Page3[0]f3_38[0]' :  account.zip_code,
         'topmostSubform[0]Page3[0]f3_35[0]' :  account.phone,
         'topmostSubform[0]Page3[0]Ciudad_ReadOrder[0]f3_37[0]' : account.state,
