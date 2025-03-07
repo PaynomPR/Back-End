@@ -21,7 +21,7 @@ from models.time import Time
 from models.payments import Payments
 from models.queries.queryFormW2pr import queryFormW2pr
 from utils.time_func import minutes_to_time, time_to_minutes
-
+from utils.country import COUNTRY
 from utils.form_499 import form_withheld_499_pdf_generator
 from utils.from_choferil import form_choferil_pdf_generator
 from utils.pdfkit.pdfhandled import create_pdf
@@ -58,7 +58,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
     end = datetime.fromisoformat(str(end)).strftime("%Y-%m-%d")
     
     all_times_query = session.query(Time, Employers,Period).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(
-        Period.period_end >= start, Period.period_end <= end, Employers.company_id == company_id
+        Time.created_at >= start, Time.created_at <= end, Employers.company_id == company_id
     ).all()
 
     employee_data = defaultdict(lambda: {'info': {}, 'payments': [], 'total': 0})  # Changed structure
@@ -72,31 +72,44 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             employee_data[employee_id]['info'] = {
                 'nombre': employer.first_name,
                 'apellido': employer.last_name,
-                'number_ss': employer.social_security_number
+                'number_ss': f"***-**-{employer.social_security_number[-4:]}" if employer.social_security_number else "", 
+
+                
             }
 
         # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({
-            "date": period.period_end,
-            'reg_pay': round(time_entry.regular_pay,2),
+            "date": time_entry.created_at.strftime("%Y/%m/%d"),
+
+            'regular_pay': round(time_entry.regular_pay,2) - round(time_entry.others,2) - round(time_entry.bonus,2),
+            
             'over_pay': round(time_entry.over_pay,2),
             'meal_pay': round(time_entry.meal_pay,2),
+             'vacation': round(time_entry.vacation_pay,2), 
             'sick_pay': round(time_entry.sick_pay,2),  
             'holyday_pay': round(time_entry.holyday_pay,2), 
-            'vacation': round(time_entry.vacation_pay,2), 
+            'bonus': round(time_entry.bonus,2),
+            'commissions': round(time_entry.commissions,2),
+            'concessions': round(time_entry.concessions,2),
+           'Propinas': round(time_entry.tips,2),
+           'others': round(time_entry.others,2),
+
+            'total_pay': round(time_entry.concessions,2)+ round(time_entry.commissions,2) +  round(time_entry.tips,2)+ round(time_entry.regular_pay,2)+round(time_entry.over_pay,2)+round(time_entry.meal_pay,2)+round(time_entry.sick_pay,2)+round(time_entry.holyday_pay,2)+round(time_entry.vacation_pay,2), 
+           'tax_pr': round(time_entry.tax_pr,2),
+            'secure_social': round(time_entry.secure_social,2),
             'medicare': round(time_entry.medicare,2),
             'disability': round(time_entry.inability,2),
-            'Propinas': round(time_entry.tips,2),
-            'bonus': round(time_entry.bonus,2),
+            
+            
             'refund': round(time_entry.refund,2),
             
             'asume': round(time_entry.asume,2),
             'aflac': round(time_entry.aflac,2),
             'donation': round(time_entry.donation,2),
            
-            'secure_social': round(time_entry.secure_social,2),
+            
             'social_tips': round(time_entry.social_tips,2),
-            'tax_pr': round(time_entry.tax_pr,2),
+            
             'choferil': round(time_entry.choferil,2),
             "total": round(time_entry.total_payment,2),
             # ... Add any other fields from the Time model as needed
@@ -148,15 +161,36 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
     template_html = """
  <!DOCTYPE html>
  <html lang="es">
- <head>
+  <head>
    <style>
-    @page { size: landscape; }
-    body { font-family: sans-serif; font-size: 10px; }
-    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    th, td { border: 1px solid #ddd; padding: 5px; text-align: left; word-wrap: break-word;}
+    @page { 
+        size: landscape;
+        margin: 5mm; /* Reduced margins on all sides */
+     }
+    body { 
+        font-family: sans-serif; 
+        font-size: 9.5px; /* Slightly reduced font size */
+        margin: 0; /* Remove default body margins */
+     }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        table-layout: fixed; 
+        margin-bottom: 5px; /* Reduced margin below tables */
+     }
+    th, td { 
+        border: 1px solid #ddd; 
+        padding: 2px; /* Reduced padding inside table cells */
+        text-align: left; 
+        word-wrap: break-word; 
+     }
+     h3 {
+        margin-bottom: 5px; /*reduce the margin beteween h3 and table */
+     }
 
     .employee-section { 
         page-break-inside: avoid; /* Prevents breaking an employee section across pages */
+        margin-bottom: 10px; /* Reduced margin between employee sections */
     }
 </style>
  </head>
@@ -617,17 +651,24 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "last_name": employer.last_name,
         "employer_address": employer.address,
         "employer_state": employer.address_state,
+        "employer_country": COUNTRY[int(employer.address_country)-1],
+
         "employer_address_number": employer.address_number,
         "employer_phone": employer.phone_number,
         "social_security_number": employer.social_security_number,
         #PERIOD INFO
-        "actual_date": datetime.now().strftime("%d-%m-%Y"),
+        "actual_date": time_query.created_at.strftime("%Y/%m/%d"),
         "start_date": period.period_start,
         "end_date": period.period_end,
         "period_type": period.period_type.value,
         # COMPANY INFO
         "company": company.name,
         "physical_address": company.physical_address,
+        #company address
+            "company_address": company.postal_address,
+            "company_state": company.state_postal_addess,
+            "company_country": COUNTRY[int(company.country_postal_address)-1],
+            "company_address_number": company.zipcode_postal_address,
         # TIME INFO
         "regular_hours": add_hours_to_time(time_query.regular_time, time_query.hours_worked_salary),  # Use the new function
 
@@ -766,15 +807,16 @@ def counterfoil_controller(company_id, employer_id, time_id):
 
                     <div class="flex-container">
                         <div class="column">
-                        <p>NUMERO DE CHEQUE {{ company }}</p>
+                        <p>{{ company }}</p>
                     <p>Fecha: {{ actual_date }}</p>
                             <p>{{ first_name }} {{ last_name }}</p>
                             <p>{{ employer_address }}</p>
-                            <p>{{ employer_state  }} {{ employer_address_number }}</p>
+                            <p>{{ employer_country  }} {{ employer_state  }} {{ employer_address_number }}</p>
                         </div>
                         <div class="column">
                             <p>{{ first_name }} {{ last_name }}</p>
-                            <p>NUMERO CHEQUE: {{ company }} {{ actual_date }}</p>
+                            <p>NUMERO CHEQUE:</p>     
+                             <p>{{ company }} {{ actual_date }}</p>
                             <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
                         </div>
                     </div>
@@ -1050,7 +1092,8 @@ Gastos Reembolsados:</td>
 
 
                                                     <p > {{ company }}</p>
-                                                    <p style="margin-top: 0px"> {{ physical_address }}</p>
+                                                  <p>{{company_address}}</p>
+                                                    <p>{{company_country}} {{company_state}} {{company_address_number}}</p>
 
                             <p style="margin-top: 24px;width: 100%;            ">PAY TO ORDER OF: <span style="border-bottom: 1px solid black;padding: 2px 16px 2px 16px;">      {{ first_name }} {{ last_name }}             </p>
                         
@@ -1061,7 +1104,7 @@ Gastos Reembolsados:</td>
                         </div>
                         <div class="column" style="text-align: right;width: 30%;">
                             <p>Fecha: {{ actual_date }}</p>
-                            <p   style="margin-top: 48px;">Total: ${{ total }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ total }}</p>
                             <p style="margin-top: 32px;">FOR: ________________</p>
                         </div>
                     </div>
@@ -1453,17 +1496,24 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         "last_name": employer.last_name,
         "employer_address": employer.address,
         "employer_state": employer.address_state,
+                "employer_country": COUNTRY[int(employer.address_country)-1],
+
         "employer_address_number": employer.address_number,
         "employer_phone": employer.phone_number,
         "social_security_number": employer.social_security_number,
         #PERIOD INFO
-        "actual_date": datetime.now().strftime("%d-%m-%Y"),
+        "actual_date": time_query.created_at.strftime("%Y/%m/%d"),
         "start_date": period.period_start,
         "end_date": period.period_end,
         "period_type": period.period_type.value,
         # COMPANY INFO
         "company": company.name,
         "physical_address": company.physical_address,
+        #company address
+            "company_address": company.postal_address,
+            "company_state": company.state_postal_addess,
+            "company_country": COUNTRY[int(company.country_postal_address)-1],
+            "company_address_number": company.zipcode_postal_address,
         # TIME INFO
         "regular_hours": time_query.regular_time,
         "over_hours": time_query.over_time,
@@ -1601,15 +1651,16 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
 
                     <div class="flex-container">
                         <div class="column">
-                        <p>NUMERO DE CHEQUE {{ company }}</p>
+                        <p>{{ company }}</p>
                     <p>Fecha: {{ actual_date }}</p>
                             <p>{{ first_name }} {{ last_name }}</p>
                             <p>{{ employer_address }}</p>
-                            <p>{{ employer_state  }} {{ employer_address_number }}</p>
+                            <p>{{ employer_country  }} {{ employer_state  }} {{ employer_address_number }}</p>
                         </div>
                         <div class="column">
                             <p>{{ first_name }} {{ last_name }}</p>
-                            <p>NUMERO CHEQUE: {{ company }} {{ actual_date }}</p>
+                            <p>NUMERO CHEQUE: </p>
+                             <p>{{ company }} {{ actual_date }}</p>
                             <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
                         </div>
                     </div>
@@ -1885,7 +1936,8 @@ Gastos Reembolsados:</td>
 
 
                                                     <p > {{ company }}</p>
-                                                    <p style="margin-top: 0px"> {{ physical_address }}</p>
+                                                    <p>{{company_address}}</p>
+                                                    <p>{{company_country}} {{company_state}} {{company_address_number}}</p>
 
                             <p style="margin-top: 24px;width: 100%;            ">PAY TO ORDER OF: <span style="border-bottom: 1px solid black;padding: 2px 16px 2px 16px;">      {{ first_name }} {{ last_name }}             </p>
                         
@@ -1896,7 +1948,7 @@ Gastos Reembolsados:</td>
                         </div>
                         <div class="column" style="text-align: right;width: 30%;">
                             <p>Fecha: {{ actual_date }}</p>
-                            <p   style="margin-top: 48px;">Total: ${{ total }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ total }}</p>
                             <p style="margin-top: 32px;">FOR: ________________</p>
                         </div>
                     </div>
@@ -2276,7 +2328,7 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
         employee_dict = {
             "nombre": employee.first_name,
             "apellido": employee.last_name,
-            "number_ss": employee.social_security_number,
+            'number_ss': f"***-**-{employee.social_security_number[-4:]}" if employer.social_security_number else "",         
             "worked_hour": "",
             "bonus": 0,
             "categoria": "",  # Assuming these fields exist
@@ -2987,11 +3039,12 @@ def all_counterfoil_controller(company_id, period_id ):
             "last_name": employer.last_name,
             "employer_address": employer.address,
             "employer_state": employer.address_state,
+            "employer_country": COUNTRY[int(employer.address_country)-1],
             "employer_address_number": employer.address_number,
             "employer_phone": employer.phone_number,
             "social_security_number": employer.social_security_number,
             #PERIOD INFO
-            "actual_date": datetime.now().strftime("%d-%m-%Y"),
+             "actual_date": time_query.created_at.strftime("%Y/%m/%d"),
             "start_date": period.period_start,
             "end_date": period.period_end,
             "period_type": period.period_type.value,
@@ -3005,6 +3058,11 @@ def all_counterfoil_controller(company_id, period_id ):
             "holiday_hours": time_query.holiday_time,
             "sick_hours": time_query.sick_time,
 
+            #company address
+            "company_address": company.postal_address,
+            "company_state": company.state_postal_addess,
+            "company_country": COUNTRY[int(company.country_postal_address)-1],
+            "company_address_number": company.zipcode_postal_address,
 
             "vacation_hours": time_query.vacation_time,
             # PAY INFO
@@ -3163,15 +3221,16 @@ def voucherTemplate():
 
                     <div class="flex-container">
                         <div class="column">
-                        <p>NUMERO DE CHEQUE {{ company }}</p>
+                        <p>{{ company }}</p>
                     <p>Fecha: {{ actual_date }}</p>
                             <p>{{ first_name }} {{ last_name }}</p>
                             <p>{{ employer_address }}</p>
-                            <p>{{ employer_state  }} {{ employer_address_number }}</p>
+                           <p>{{ employer_country  }} {{ employer_state  }} {{ employer_address_number }}</p>
                         </div>
                         <div class="column">
                             <p>{{ first_name }} {{ last_name }}</p>
-                            <p>NUMERO CHEQUE: {{ company }} {{ actual_date }}</p>
+                            <p>NUMERO CHEQUE: </p>
+                              <p>{{ company }} {{ actual_date }}</p>
                             <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
                         </div>
                     </div>
@@ -3447,7 +3506,9 @@ Gastos Reembolsados:</td>
 
 
                                                     <p > {{ company }}</p>
-                                                    <p style="margin-top: 0px"> {{ physical_address }}</p>
+                                                    <p>{{company_address}}</p>
+                                                    <p>{{company_country}} {{company_state}} {{company_address_number}}</p>
+                                                   
 
                             <p style="margin-top: 24px;width: 100%;            ">PAY TO ORDER OF: <span style="border-bottom: 1px solid black;padding: 2px 16px 2px 16px;">      {{ first_name }} {{ last_name }}             </p>
                         
@@ -3458,7 +3519,7 @@ Gastos Reembolsados:</td>
                         </div>
                         <div class="column" style="text-align: right;width: 30%;">
                             <p>Fecha: {{ actual_date }}</p>
-                            <p   style="margin-top: 48px;">Total: ${{ total }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ total }}</p>
                             <p style="margin-top: 32px;">FOR: ________________</p>
                         </div>
                     </div>
