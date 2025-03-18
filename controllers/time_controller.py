@@ -67,7 +67,7 @@ def create_time_controller(time_data, employer_id):
     vacation_time=time_data.vacation_time,
     commissions=time_data.commissions,
     concessions=time_data.concessions,
-    
+    medical_insurance = time_data.medical_insurance,
     bonus=time_data.bonus,
 
     others=time_data.others,
@@ -114,6 +114,7 @@ def create_time_controller(time_data, employer_id):
         time_data.choferil +
         time_data.inability +
         time_data.medicare +
+        
         time_data.secure_social +
         time_data.social_tips +
         time_data.tax_pr
@@ -159,7 +160,7 @@ def create_time_controller(time_data, employer_id):
         
 
     time_query = Time(
-
+        pay_date = time_data.pay_date,
         regular_pay=time_data.regular_pay,
         over_pay=time_data.overtime_pay,
         meal_pay=time_data.meal_time_pay,
@@ -169,6 +170,7 @@ def create_time_controller(time_data, employer_id):
         employer_retained = withholdingValue,
         regular_time=time_data.regular_time,
         over_time=time_data.over_time,
+        tax_pr_percent = time_data.tax_pr_percent,
         meal_time=time_data.meal_time,
         regular_amount=employers.regular_time,
         over_amount=employers.overtime,
@@ -450,18 +452,21 @@ def update_time_controller(time_id, time):
     time_query.meal_amount = time.meal_amount
     time_query.salary = time.salary
     time_query.refund = time.refund
+    time_query.pay_date = time.pay_date
 
-    time_query.regular_pay=time.regular_pay,
-    time_query.over_pay=time.overtime_pay,
-    time_query.meal_pay=time.meal_time_pay,
-    time_query.sick_pay=time.sick_pay,
-    time_query.vacation_pay=time.vacation_pay,
 
-    time_query.holyday_pay=time.holyday_pay, 
+    time_query.regular_pay=time.regular_pay
+    time_query.over_pay=time.overtime_pay
+    time_query.meal_pay=time.meal_time_pay
+    time_query.sick_pay=time.sick_pay
+    time_query.vacation_pay=time.vacation_pay
+    time_query.medical_insurance = time.medical_insurance
+
+    time_query.holyday_pay=time.holyday_pay
 
     time_query.donation = time.donation
     time_query.asume = time.asume
-    time_query.accountant_id=time.accountant_id,
+    time_query.accountant_id=time.accountant_id
 
 
     time_query.commissions = time.commissions

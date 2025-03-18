@@ -34,8 +34,8 @@ def getTotalAmountAndExemptAmount(company_id, date_period):
       ).join(Employers, Employers.id == Time.employer_id
       ).join(Period, Period.id == Time.period_id).filter(     
         Employers.company_id == company_id,
-        Period.period_end >= date_period['start'],
-        Period.period_end <= date_period['end']
+        Period.pay_date >= date_period['start'],
+        Period.pay_date <= date_period['end']
     ).group_by(Employers.id).all()
 
     total = 0
@@ -70,8 +70,8 @@ def getTotalAmount(company_id, date_period):
       ).join(Employers, Employers.id == Time.employer_id
       ).join(Period, Period.id == Time.period_id).filter(     
         Employers.company_id == company_id,
-        Period.period_start >= date_period['start'],
-        Period.period_end <= date_period['end']
+        Period.pay_date >= date_period['start'],
+        Period.pay_date <= date_period['end']
       
     ).scalar()
 
@@ -87,8 +87,8 @@ def getTotalAmountAndWeeks(company_id, year, periodo):
       ).join(Employers, Employers.id == Time.employer_id
       ).join(Period, Period.id == Time.period_id).filter(     
         Employers.company_id == company_id,
-        Period.period_start >= period['start'],
-        Period.period_end <= period['end']
+        Period.pay_date >= period['start'],
+        Period.pay_date <= period['end']
       ).scalar()
 
     return {
@@ -118,8 +118,8 @@ def getAmountVariosByCompany(company_id, year, period = None):
       ).join(Employers, Employers.id == Time.employer_id
       ).filter(
           Employers.company_id == company_id,
-          Period.period_start >= date_start,
-          Period.period_end <= date_end
+          Period.pay_date >= date_start,
+          Period.pay_date <= date_end
       ).group_by(Employers.id).all()
 
     return result
@@ -145,8 +145,8 @@ def getAmountVarios(employer_id, year, period = None):
       ).join(Employers, Employers.id == Time.employer_id
       ).filter(
           Employers.id == employer_id,
-          Period.period_start >= date_start,
-          Period.period_end <= date_end
+          Period.pay_date >= date_start,
+          Period.pay_date <= date_end
       ).all()
 
     return result[0]
@@ -207,7 +207,7 @@ def getAmountVariosCompany(company_id, year, period = None):
       func.sum(Time.social_tips).label('social_tips'),
       func.sum(Time.secure_social).label('secure_social'),
       func.sum(Time.tax_pr).label('taxes_pr')
-      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.period_end >= date_start ,Period.period_end <= date_end ).all()
+      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.pay_date >= date_start ,Period.pay_date <= date_end ).all()
       
     return result[0]
 
@@ -218,8 +218,8 @@ def getAmountVariosCompanyByMouth(company_id, year):
     date_end = date(year, 12, 31)
     result = session.query(
   
-        extract('year', Period.period_end).label('year'),
-    extract('month', Period.period_end).label('month'),
+        extract('year', Period.pay_date).label('year'),
+    extract('month', Period.pay_date).label('month'),
     func.sum(Time.regular_pay + Time.over_pay + Time.vacation_pay + Time.meal_pay + Time.sick_pay + Time.holyday_pay + Time.commissions + Time.concessions+ Time.tips).label('wages'),
     func.sum(Time.regular_pay).label('regular_pay'),
     func.sum(Time.over_pay).label('over_pay'),
@@ -240,9 +240,9 @@ def getAmountVariosCompanyByMouth(company_id, year):
     ).select_from(Period) \
     .join(Time, Period.id == Time.period_id) \
     .join(Employers, Time.employer_id == Employers.id) \
-    .filter(Employers.company_id == company_id, Period.period_end >= date_start, Period.period_end <= date_end) \
-    .group_by(extract('year', Period.period_end), extract('month', Period.period_end)) \
-.order_by(extract('year', Period.period_end), extract('month', Period.period_end)) \
+    .filter(Employers.company_id == company_id, Period.pay_date >= date_start, Period.pay_date <= date_end) \
+    .group_by(extract('year', Period.pay_date), extract('month', Period.pay_date)) \
+.order_by(extract('year', Period.pay_date), extract('month', Period.pay_date)) \
     .all()
     return result
 
@@ -259,7 +259,7 @@ def getBonusCompany(company_id, date_start, date_end,bonus):
     # ... (tu código existente)
 
     # Obtener todos los registros sin agrupar
-    all_times_query = session.query(Time,Employers).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(Period.period_end >= date_start, Period.period_end <= date_end, Employers.company_id == company_id).all()
+    all_times_query = session.query(Time,Employers).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(Period.pay_date >= date_start, Period.pay_date <= date_end, Employers.company_id == company_id).all()
 
     # Crear un diccionario para almacenar los totales por empleado
     employee_totals = defaultdict(lambda: {
@@ -319,7 +319,7 @@ def getAmountCSFECompany(company_id, date_start, date_end ):
       func.sum(Time.social_tips).label('social_tips'),
       func.sum(Time.secure_social).label('secure_social'),
       func.sum(Time.tax_pr).label('taxes_pr')
-      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.period_end >= date_start , Period.period_end <= date_end ).group_by(Time.employer_id).all()
+      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.pay_date >= date_start , Period.pay_date <= date_end ).group_by(Time.employer_id).all()
     
     return result or []  # Return an empty list if result is None
 
@@ -347,7 +347,7 @@ def getAmountByCompany(company_id, date_start, date_end ):
       func.sum(Time.social_tips).label('social_tips'),
       func.sum(Time.secure_social).label('secure_social'),
       func.sum(Time.tax_pr).label('taxes_pr')
-      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.period_end >= date_start , Period.period_end <= date_end ).group_by(Employers.company_id).all()
+      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.pay_date >= date_start , Period.pay_date <= date_end ).group_by(Employers.company_id).all()
     
     return result or []  # Return an empty list if result is None
 def getAmountGroupEmployerWages(company_id, start , end ):
@@ -374,7 +374,7 @@ def getAmountGroupEmployerWages(company_id, start , end ):
       func.sum(Time.social_tips).label('social_tips'),
       func.sum(Time.secure_social).label('secure_social'),
       func.sum(Time.tax_pr).label('taxes_pr')
-      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.period_end >= start , Period.period_end <= end ).group_by(Employers.id).all()
+      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.pay_date >= start , Period.pay_date <= end ).group_by(Employers.id).all()
     
     return result or []  # Return an empty list if result is None
 def getAmountGroupEmployer(company_id, year , month ):
@@ -402,7 +402,7 @@ def getAmountGroupEmployer(company_id, year , month ):
       func.sum(Time.social_tips).label('social_tips'),
       func.sum(Time.secure_social).label('secure_social'),
       func.sum(Time.tax_pr).label('taxes_pr')
-      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.period_end >= date_start , Period.period_end <= date_end ).group_by(Employers.id).all()
+      ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id).filter( Employers.company_id == company_id,  Period.pay_date >= date_start , Period.pay_date <= date_end ).group_by(Employers.id).all()
     
     return result or []  # Return an empty list if result is None
        
@@ -460,14 +460,14 @@ def getAmountVariosCompanyGroupByMonth(company_id, year, period = None):
       func.sum(Time.social_tips).label('social_tips'),
       func.sum(Time.secure_social).label('secure_social'),
       func.sum(Time.tax_pr).label('taxes_pr'),
-      func.date_trunc('month', Period.period_end).label('month'),
+      func.date_trunc('month', Period.pay_date).label('month'),
       ).join(Employers, Time.employer_id == Employers.id
       ).join(Period, Period.id == Time.period_id 
       
-      ).filter( Employers.company_id == company_id, Period.period_end >= date_start, Period.period_end <= date_end 
-      ).group_by(func.date_trunc('month', Period.period_end)) \
-  .having(func.date_trunc('month', Period.period_end) <= date_end) \
-  .order_by(func.date_trunc('month', Period.period_end)).all()
+      ).filter( Employers.company_id == company_id, Period.pay_date >= date_start, Period.pay_date <= date_end 
+      ).group_by(func.date_trunc('month', Period.pay_date)) \
+  .having(func.date_trunc('month', Period.pay_date) <= date_end) \
+  .order_by(func.date_trunc('month', Period.pay_date)).all()
 
     return result
 
@@ -477,8 +477,8 @@ def getEmployers7000(company_id, date_period):
       ).join(Employers, Time.employer_id == Employers.id
       ).join(Period, Period.id == Time.period_id ).filter(
         Employers.company_id == company_id,
-        Period.period_start >= date_period['start'],
-        Period.period_end <= date_period['end']      
+        Period.pay_date >= date_period['start'],
+        Period.pay_date <= date_period['end']      
     ).group_by(Time.employer_id).all()
     result = 0
     for value in arrayTotal:
@@ -500,8 +500,8 @@ def getEmployersAmountToDate(company_id,year, month):
       ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id
       ).filter(
         Employers.company_id == company_id,
-        Period.period_end >= date_start,
-        Period.period_end <= date_end
+        Period.pay_date >= date_start,
+        Period.pay_date <= date_end
         
     ).group_by(Employers.id).all()
 
@@ -518,8 +518,8 @@ def getEmployersAmount(company_id, date_period):
       ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id
       ).filter(
         Employers.company_id == company_id,
-        Period.period_end >= date_period['start'],
-        Period.period_end <= date_period['end']
+        Period.pay_date >= date_period['start'],
+        Period.pay_date <= date_period['end']
         
     ).group_by(Employers.id).all()
 
@@ -538,8 +538,8 @@ def getEmployersChoferilAmount(company_id, date_period):
       ).filter(
          Employers.choferil == "SI",
         Employers.company_id == company_id,
-        Period.period_end >= date_period['start'],
-        Period.period_end <= date_period['end']
+        Period.pay_date >= date_period['start'],
+        Period.pay_date <= date_period['end']
         
     ).group_by(Employers.id).all()
 

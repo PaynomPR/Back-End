@@ -29,8 +29,15 @@ class Time(Base):
     concessions: Mapped[float] = mapped_column(nullable=True, default=0)
     tips: Mapped[float] = mapped_column(nullable=True, default=0)
     asume: Mapped[float] = mapped_column(nullable=True, default=0)
+    medical_insurance: Mapped[float] = mapped_column(nullable=True, default=0)
+    tax_pr_percent: Mapped[float] = mapped_column(nullable=True, default=0)
+    pay_date: Mapped[Date] = mapped_column(Date, nullable=True)
+
+
+
 
     inability: Mapped[float] = mapped_column(nullable=True, default=0)
+    medicare: Mapped[float] = mapped_column(nullable=True, default=0)
     medicare: Mapped[float] = mapped_column(nullable=True, default=0)
     others: Mapped[float] = mapped_column(nullable=True, default=0)
     refund: Mapped[float] = mapped_column(nullable=True, default=0)

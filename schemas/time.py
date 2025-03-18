@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ValidationError, validator
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 from schemas.payments import PaymentIDShema
 import re
@@ -27,8 +27,9 @@ class TimeShema(BaseModel):
     sick_pay: float = Field(ge=0, description="Debe ser un valor positivo")
     vacation_pay: float = Field(ge=0, description="Debe ser un valor positivo")
     holyday_pay: float = Field(ge=0, description="Debe ser un valor positivo")
-    
-    
+    medical_insurance :float = Field(ge=0, description="Debe ser un valor positivo")
+    pay_date: date
+    tax_pr_percent: float = Field(ge=0, description="Debe ser un valor positivo")
     bonus: float = Field(ge=0, description="Debe ser un valor positivo")
     others: float = Field(ge=0, description="Debe ser un valor positivo")
     concessions: float = Field(ge=0, description="Debe ser un valor positivo")

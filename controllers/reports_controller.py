@@ -45,8 +45,7 @@ report_router = APIRouter()
 def counterfoil_by_range_controller(company_id, employer_id,start,end):
     
     # Obtener la información de la empresa
-    company = session.query(Companies).filter(Companies.id == company_id).first()
-    employees = session.query(Employers).filter(Employers.company_id == company_id).all()
+    company = session.query(Companies).filter(Companies.id == company_id).first()    
 
     if not company:
         raise HTTPException(
@@ -54,11 +53,17 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             detail="Compañoa no encontrada"
         )
     
-    start = datetime.fromisoformat(str(start)).strftime("%Y-%m-%d")
-    end = datetime.fromisoformat(str(end)).strftime("%Y-%m-%d")
+    start_date = datetime.fromisoformat(str(start))
+    end_date = datetime.fromisoformat(str(end))
+    
+    # Set the start time to the beginning of the day (00:00:00)
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Set the end time to the end of the day (23:59:59)
+    end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
     
     all_times_query = session.query(Time, Employers,Period).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(
-        Time.created_at >= start, Time.created_at <= end, Employers.company_id == company_id
+        Time.pay_date >= start_date, Time.pay_date <= end_date, Employers.company_id == company_id
     ).all()
 
     employee_data = defaultdict(lambda: {'info': {}, 'payments': [], 'total': 0})  # Changed structure
@@ -76,10 +81,27 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
 
                 
             }
+        total_income = time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.holyday_pay  + time_entry.commissions + time_entry.concessions + time_entry.tips + time_entry.refund
+
+        
+    
+
+        total_egress =(
+            time_entry.choferil +
+            time_entry.inability +
+            time_entry.medicare +
+            time_entry.aflac +
+            time_entry.secure_social +
+            time_entry.social_tips +
+            time_entry.tax_pr
+
+        )
+
+        total = total_income -total_egress
 
         # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({
-            "date": time_entry.created_at.strftime("%Y/%m/%d"),
+            "date": time_entry.pay_date.strftime("%Y/%m/%d"),
 
             'regular_pay': round(time_entry.regular_pay,2) - round(time_entry.others,2) - round(time_entry.bonus,2),
             
@@ -99,9 +121,9 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             'secure_social': round(time_entry.secure_social,2),
             'medicare': round(time_entry.medicare,2),
             'disability': round(time_entry.inability,2),
+            'plan_medico': round(time_entry.medical_insurance,2),
             
             
-            'refund': round(time_entry.refund,2),
             
             'asume': round(time_entry.asume,2),
             'aflac': round(time_entry.aflac,2),
@@ -111,7 +133,8 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             'social_tips': round(time_entry.social_tips,2),
             
             'choferil': round(time_entry.choferil,2),
-            "total": round(time_entry.total_payment,2),
+            'refund': round(time_entry.refund,2),
+            "total": round(total,2),
             # ... Add any other fields from the Time model as needed
         })
 
@@ -332,6 +355,9 @@ def counterfoil_controller(company_id, employer_id, time_id):
                     func.sum(Time.asume).label("total_asume"),
                     func.sum(Time.concessions).label("total_concessions"),
                     func.sum(Time.commissions).label("total_commissions"),
+                    func.sum(Time.medical_insurance).label("total_medical_insurance"),
+
+                    
                     func.sum(Time.bonus).label("total_bonus"),
                     func.sum(Time.refund).label("total_refund"),
                     func.sum(Time.medicare).label("total_medicare"),
@@ -548,7 +574,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
 
         aflac = time_query.aflac
 
-        return float(secure_social) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
+        return float(secure_social) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + (time_query.medical_insurance) + float(time_query.donation)
     # Function to add hours to HH:MM time string (new function)
     def add_hours_to_time(time_str, hours_to_add):
         try:
@@ -611,6 +637,8 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "total_inability" : round(all_time_query[0].total_inability, 2) ,
         "total_others" : round(all_time_query[0].total_others, 2) ,
         "total_asume" : round(all_time_query[0].total_asume, 2) ,
+        "total_medical_insurance" : round(all_time_query[0].total_medical_insurance, 2) ,
+        
         "total_aflac" : round(all_time_query[0].total_aflac, 2) ,
         "total_donation" : round(all_time_query[0].total_donation, 2) ,
         "total_concessions" : round(all_time_query[0].total_concessions, 2) ,
@@ -634,8 +662,8 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "total_col_1" : round(time_query.regular_pay+time_query.over_pay+time_query.meal_pay+time_query.holyday_pay+time_query.sick_pay+time_query.vacation_pay+ time_query.tips+ time_query.commissions+ time_query.concessions, 2) ,
         "total_col_1_year" : round(all_time_query[0].total_regular_pay+all_time_query[0].total_over_pay+all_time_query[0].total_meal_pay+all_time_query[0].total_holyday_pay+all_time_query[0].total_sick_pay+all_time_query[0].total_vacation_pay+ all_time_query[0].total_tips+ all_time_query[0].total_commissions+ all_time_query[0].total_concessions, 2) ,
         
-        "total_col_2" : round(time_query.asume+time_query.donation+payment_amount+time_query.aflac-time_query.refund, 2) ,
-        "total_col_2_year" : round(all_time_query[0].total_asume+all_time_query[0].total_donation+total_payment_amount+all_time_query[0].total_aflac-all_time_query[0].total_refund, 2) ,
+        "total_col_2" : round(time_query.asume+time_query.donation+time_query.medical_insurance+payment_amount+time_query.aflac-time_query.refund, 2) ,
+        "total_col_2_year" : round(all_time_query[0].total_asume+all_time_query[0].total_donation+all_time_query[0].total_medical_insurance+total_payment_amount+all_time_query[0].total_aflac-all_time_query[0].total_refund, 2) ,
 
         "total_col_3" : round(time_query.tax_pr+time_query.secure_social+time_query.choferil+time_query.inability+time_query.medicare+time_query.social_tips, 2) ,
         "total_col_3_year" : round(all_time_query[0].total_tax_pr+all_time_query[0].total_ss+all_time_query[0].total_choferil+all_time_query[0].total_inability+all_time_query[0].total_medicare+all_time_query[0].total_social_tips, 2) ,
@@ -645,7 +673,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
 
         "bonus": time_query.bonus,
         "aflac": time_query.aflac,
-
+        "medical_insurance" : time_query.medical_insurance,
         "refund": time_query.refund,
         "donation": time_query.donation,
         "last_name": employer.last_name,
@@ -657,7 +685,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "employer_phone": employer.phone_number,
         "social_security_number": employer.social_security_number,
         #PERIOD INFO
-        "actual_date": time_query.created_at.strftime("%Y/%m/%d"),
+        "actual_date": time_query.pay_date.strftime("%Y/%m/%d"),
         "start_date": period.period_start,
         "end_date": period.period_end,
         "period_type": period.period_type.value,
@@ -924,6 +952,11 @@ Gastos Reembolsados:</td>
                         <td>${{ aflac }}</td>
                         <td>${{ total_aflac }}</td>
                     </tr>
+   <tr>
+                        <td>Plan Medico:</td>
+                        <td>${{ plan_medico }}</td>
+                        <td>${{ total_medical_insurance }}</td>
+                    </tr>
 
                     
 
@@ -1189,6 +1222,8 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
                     func.sum(Time.asume).label("total_asume"),
                     func.sum(Time.concessions).label("total_concessions"),
                     func.sum(Time.commissions).label("total_commissions"),
+                    func.sum(Time.medical_insurance).label("total_medical_insurance"),
+
                     func.sum(Time.bonus).label("total_bonus"),
                     func.sum(Time.refund).label("total_refund"),
                     func.sum(Time.medicare).label("total_medicare"),
@@ -1402,7 +1437,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
 
         aflac = time_query.aflac
 
-        return float(secure_social) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
+        return float(secure_social) + float(time_query.medicual_insurance) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
 
     def calculate_payments():
         amount = 0
@@ -1472,6 +1507,8 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         "total_meal_time" : total_mealt_time ,
         "holiday_time_pay" : time_query.holyday_pay,
         "total_holiday_pay" : all_time_query[0].total_holyday_pay ,
+        "total_medical_insurance" : all_time_query[0].total_medical_insurance ,
+
 
         "total_holiday_time" : total_holiday_time ,
         "total_sick_time" : total_sick_time ,
@@ -1490,6 +1527,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
 
         "bonus": time_query.bonus,
         "aflac": time_query.aflac,
+        'plan_medico': round(time_entry.medical_insurance,2),
 
         "refund": time_query.refund,
         "donation": time_query.donation,
@@ -1502,7 +1540,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         "employer_phone": employer.phone_number,
         "social_security_number": employer.social_security_number,
         #PERIOD INFO
-        "actual_date": time_query.created_at.strftime("%Y/%m/%d"),
+        "actual_date": time_query.pay_date.strftime("%Y/%m/%d"),
         "start_date": period.period_start,
         "end_date": period.period_end,
         "period_type": period.period_type.value,
@@ -1768,10 +1806,12 @@ Gastos Reembolsados:</td>
                         <td>${{ aflac }}</td>
                         <td>${{ total_aflac }}</td>
                     </tr>
+ <tr>
+    <td>Plan Medico:</td>
+                    <td>${{ plan_medico }}</td>
+                        <td>${{ total_medical_insurance }}</td>
 
-                    
-
-
+</tr>
                     
                         {{payment_texts}}
                         <tr>
@@ -3044,7 +3084,7 @@ def all_counterfoil_controller(company_id, period_id ):
             "employer_phone": employer.phone_number,
             "social_security_number": employer.social_security_number,
             #PERIOD INFO
-             "actual_date": time_query.created_at.strftime("%Y/%m/%d"),
+             "actual_date": time_query.pay_date.strftime("%Y/%m/%d"),
             "start_date": period.period_start,
             "end_date": period.period_end,
             "period_type": period.period_type.value,
