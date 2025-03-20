@@ -2,7 +2,7 @@ from datetime import datetime
 import pathlib
 
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -14,6 +14,7 @@ from models.periods import Period
 from models.time import Time
 
 from utils.pdfkit.pdfhandled import create_pdf
+
 
 report_router = APIRouter()
 
@@ -77,15 +78,7 @@ async def all_counterfoil(company_id: int, period_id: int):
 
 @report_router.post("/wages/range")
 async def counterfoil_by_range(companyRange: CompanyRange):
-    try:
-        return counterfoil_by_range_controller(companyRange.company_id, companyRange.employer_id,companyRange.start,companyRange.end)
-    except HTTPException as http_exception:
-        raise http_exception
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(e)}"
-        )
+    return counterfoil_by_range_controller(companyRange.company_id, companyRange.employer_id,companyRange.start,companyRange.end)
 
 @report_router.get("/counterfoil/{company_id}/{employer_id}/period/{period_id}")
 async def counterfoil_by_period(company_id: int, employer_id: int, period_id: int):

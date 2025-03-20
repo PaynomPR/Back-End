@@ -98,7 +98,9 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
         )
 
         total = total_income -total_egress
-
+        if (time_entry.medical_insurance == None):
+            time_entry.medical_insurance = 0
+        
         # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({
             "date": time_entry.pay_date.strftime("%Y/%m/%d"),
