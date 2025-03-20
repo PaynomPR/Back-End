@@ -637,7 +637,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "total_inability" : round(all_time_query[0].total_inability, 2) ,
         "total_others" : round(all_time_query[0].total_others, 2) ,
         "total_asume" : round(all_time_query[0].total_asume, 2) ,
-        "total_medical_insurance" : round(all_time_query[0].total_medical_insurance, 2) ,
+        "total_medical_insurance" : all_time_query[0].total_medical_insurance,
         
         "total_aflac" : round(all_time_query[0].total_aflac, 2) ,
         "total_donation" : round(all_time_query[0].total_donation, 2) ,
@@ -1527,7 +1527,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
 
         "bonus": time_query.bonus,
         "aflac": time_query.aflac,
-        'plan_medico': round(time_entry.medical_insurance,2),
+        'plan_medico': time_entry.medical_insurance,
 
         "refund": time_query.refund,
         "donation": time_query.donation,
