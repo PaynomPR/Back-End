@@ -121,7 +121,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             'secure_social': round(time_entry.secure_social,2),
             'medicare': round(time_entry.medicare,2),
             'disability': round(time_entry.inability,2),
-            'plan_medico': round(time_entry.medical_insurance,2),
+            'plan_medico': time_entry.medical_insurance,
             
             
             
