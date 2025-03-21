@@ -642,8 +642,9 @@ def counterfoil_controller(company_id, employer_id, time_id):
         
     if (time_query.medical_insurance == None):
         time_query.medical_insurance = 0
-    if (all_time_query[0].total_medical_insurance == None):
-        all_time_query[0].total_medical_insurance = 0
+    total_medical_insurance = 0
+    if (all_time_query[0].total_medical_insurance):
+        total_medical_insurance = all_time_query[0].total_medical_insurance 
 
 
     info = {
@@ -665,7 +666,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "total_inability" : round(all_time_query[0].total_inability, 2) ,
         "total_others" : round(all_time_query[0].total_others, 2) ,
         "total_asume" : round(all_time_query[0].total_asume, 2) ,
-        "total_medical_insurance" : all_time_query[0].total_medical_insurance,
+        "total_medical_insurance" : total_medical_insurance,
         
         "total_aflac" : round(all_time_query[0].total_aflac, 2) ,
         "total_donation" : round(all_time_query[0].total_donation, 2) ,
@@ -691,7 +692,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "total_col_1_year" : round(all_time_query[0].total_regular_pay+all_time_query[0].total_over_pay+all_time_query[0].total_meal_pay+all_time_query[0].total_holyday_pay+all_time_query[0].total_sick_pay+all_time_query[0].total_vacation_pay+ all_time_query[0].total_tips+ all_time_query[0].total_commissions+ all_time_query[0].total_concessions, 2) ,
         
         "total_col_2" : round(time_query.asume+time_query.donation+time_query.medical_insurance+payment_amount+time_query.aflac-time_query.refund, 2) ,
-        "total_col_2_year" : round(all_time_query[0].total_asume+all_time_query[0].total_donation+all_time_query[0].total_medical_insurance+total_payment_amount+all_time_query[0].total_aflac-all_time_query[0].total_refund, 2) ,
+        "total_col_2_year" : round(all_time_query[0].total_asume+all_time_query[0].total_donation+total_medical_insurance+total_payment_amount+all_time_query[0].total_aflac-all_time_query[0].total_refund, 2) ,
 
         "total_col_3" : round(time_query.tax_pr+time_query.secure_social+time_query.choferil+time_query.inability+time_query.medicare+time_query.social_tips, 2) ,
         "total_col_3_year" : round(all_time_query[0].total_tax_pr+all_time_query[0].total_ss+all_time_query[0].total_choferil+all_time_query[0].total_inability+all_time_query[0].total_medicare+all_time_query[0].total_social_tips, 2) ,
