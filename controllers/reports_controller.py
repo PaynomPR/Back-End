@@ -33,9 +33,10 @@ from utils.form_493 import form_943_pdf_generator
 from utils.unemployment import form_unemployment_pdf_generator
 from utils.form_w2p_txt import form_w2p_txt_generator
 from utils.form_w2psse_txt import form_w2psse_txt_generator
+from collections import defaultdict, OrderedDict
 
 from utils.form_w2pr import form_w2pr_pdf_generate
-from collections import defaultdict
+
 from models.queries.queryUtils import   getAmountCSFECompany , getBonusCompany
 
 report_router = APIRouter()
@@ -68,7 +69,14 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
 
     employee_data = defaultdict(lambda: {'info': {}, 'payments': [], 'total': 0})  # Changed structure
     grand_total = 0
-
+    # Define the desired order of keys
+    desired_order = [
+        'regular_pay', 'over_pay', 'meal_pay', 'vacation', 'sick_pay',
+        'holyday_pay', 'bonus', 'commissions', 'concessions', 'Propinas',
+        'others', 'total_pay', 'tax_pr', 'secure_social', 'medicare',
+        'disability', 'plan_medico', 'asume', 'aflac', 'donation',
+        'social_tips', 'choferil', 'refund', "total"
+    ]
     for time_entry, employer , period in all_times_query:
         employee_id = employer.id
         if (time_entry.medical_insurance == None):
@@ -167,14 +175,26 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
         ]
         employee_data_list.append(data)
 
+    grand_totals = OrderedDict()  # Totals for all employees
 
-    grand_totals = defaultdict(int)  # Totals for all employees
 
     for employee in employee_data_list: # Calculate grand totals from each employee total.
         for key, value in employee["totals"].items():
-             grand_totals[key] += round(value,2)
+            if key not in grand_totals:
+                grand_totals[key] = 0
+            grand_totals[key] += round(value,2)
                 
     grand_totals = {k: v for k, v in grand_totals.items() if v != 0} # Filters out the zero columns
+    
+    # Reorder the keys in the grand_totals dictionary
+    reordered_grand_totals = OrderedDict()
+    for key in desired_order:
+        if key in grand_totals:
+            reordered_grand_totals[key] = grand_totals[key]
+    for key, value in grand_totals.items():
+        if key not in desired_order:
+            reordered_grand_totals[key] = value
+    grand_totals = reordered_grand_totals
 
     info = {
         "data": employee_data_list,
