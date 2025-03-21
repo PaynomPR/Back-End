@@ -640,7 +640,9 @@ def counterfoil_controller(company_id, employer_id, time_id):
     print("----------------vacation_acum"+ str(vacation_acum))
     print("----------------sicks_acum"+ str(sicks_acum))
         
-    
+    if (time_query.medical_insurance == None):
+        time_query.medical_insurance = 0
+
     info = {
         # EMPLOYERS INFO
         "first_name": employer.first_name,
