@@ -82,12 +82,13 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
 
                 
             }
-        total_income = time_entry.medical_insurance + time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.holyday_pay  + time_entry.commissions + time_entry.concessions + time_entry.tips + time_entry.refund
+        total_income =  time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.holyday_pay  + time_entry.commissions + time_entry.concessions + time_entry.tips + time_entry.refund
 
         
     
 
         total_egress =(
+            time_entry.medical_insurance +
             time_entry.choferil +
             time_entry.inability +
             time_entry.medicare +
