@@ -642,6 +642,9 @@ def counterfoil_controller(company_id, employer_id, time_id):
         
     if (time_query.medical_insurance == None):
         time_query.medical_insurance = 0
+    if (all_time_query[0].total_medical_insurance == None):
+        all_time_query[0].total_medical_insurance = 0
+
 
     info = {
         # EMPLOYERS INFO
