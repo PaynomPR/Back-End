@@ -20,7 +20,7 @@ class TimeShema(BaseModel):
     salary: float = Field(ge=0, description="Debe ser un valor positivo")
     refund: float = Field(ge=0, description="Debe ser un valor positivo")
     donation: float = Field(ge=0, description="Debe ser un valor positivo")
-
+    retention_type : float = Field(ge=0, description="Debe ser un valor positivo")
     regular_pay: float = Field(ge=0, description="Debe ser un valor positivo")
     overtime_pay: float = Field(ge=0, description="Debe ser un valor positivo")
     meal_time_pay: float = Field(ge=0, description="Debe ser un valor positivo")

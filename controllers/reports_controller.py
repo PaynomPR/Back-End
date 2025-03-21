@@ -71,7 +71,8 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
 
     for time_entry, employer , period in all_times_query:
         employee_id = employer.id
-        
+        if (time_entry.medical_insurance == None):
+            time_entry.medical_insurance = 0
         # Store employee info only once
         if 'nombre' not in employee_data[employee_id]['info']:  # Check if already added
             employee_data[employee_id]['info'] = {
@@ -81,7 +82,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
 
                 
             }
-        total_income = time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.holyday_pay  + time_entry.commissions + time_entry.concessions + time_entry.tips + time_entry.refund
+        total_income = time_entry.medical_insurance + time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.holyday_pay  + time_entry.commissions + time_entry.concessions + time_entry.tips + time_entry.refund
 
         
     
@@ -98,8 +99,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
         )
 
         total = total_income -total_egress
-        if (time_entry.medical_insurance == None):
-            time_entry.medical_insurance = 0
+        
         
         # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({

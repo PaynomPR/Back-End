@@ -32,6 +32,7 @@ class Time(Base):
     medical_insurance: Mapped[float] = mapped_column(nullable=True, default=0)
     tax_pr_percent: Mapped[float] = mapped_column(nullable=True, default=0)
     pay_date: Mapped[Date] = mapped_column(Date, nullable=True)
+    retention_type: Mapped[float] = mapped_column(nullable=True)
 
 
 
