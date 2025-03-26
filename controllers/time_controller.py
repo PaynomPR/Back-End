@@ -58,6 +58,7 @@ def create_time_controller(time_data, employer_id):
     #calculamos el total_payment
     regular_time=time_data.regular_time,
     over_time=time_data.over_time,
+    retention_type = time_data.retention_type,
     meal_time=time_data.meal_time,
     regular_amount=employers.regular_time,
     over_amount=employers.overtime,
@@ -179,6 +180,7 @@ def create_time_controller(time_data, employer_id):
         refund=time_data.refund,
         donation=time_data.donation,
         asume=time_data.asume,
+        retention_type = retention_type,
         aflac=time_data.aflac,
         accountant_id=time_data.accountant_id,
 
