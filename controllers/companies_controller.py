@@ -20,6 +20,7 @@ from datetime import datetime
 from typing import Dict, Any
 from routers.auth import user_dependency
 from sqlalchemy import func
+from datetime import date
 
 companies_router = APIRouter()
 
@@ -132,137 +133,172 @@ def time_to_hours(time_str: str) -> float:
     hours, minutes = map(int, time_str.split(':'))
     return hours + minutes / 60
 
+# The above code is a Python function named `get_all_company_and_employer_controller` that takes
+# parameters `user`, `company_id`, `employers_id`, and `year`. Here is a breakdown of what the code is
+# doing:
 def get_all_company_and_employer_controller(user, company_id, employers_id,year):    
     try:
-        # Filtramos la compañía y el empleador
-        companie_query = session.query(Companies).filter(Companies.id == company_id).first()
-        if not companie_query:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
+            year = int(year)  # Convert year to integer
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid year format. Year must be an integer.")
+    # Filtramos la compañía y el empleador
+    companie_query = session.query(Companies).filter(Companies.id == company_id).first()
+    if not companie_query:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
+    
+    employer_query = session.query(Employers).filter(Employers.id == employers_id).first()
+    if not employer_query:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employer not found")
+    type_period = 0
+    # Obtener el period_id del payment_type del modelo time
+    if (employer_query.period_norma == 1):
+        type_period = PeriodType.WEEKLY
+    elif (employer_query.period_norma == 2):
+        type_period = PeriodType.BIWEEKLY
+    elif (employer_query.period_norma == 4):
+        type_period = PeriodType.MONTHLY
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment type not found")
+    
+    # Consulta para obtener todos los periodos del año 2024 y con period_start mayor que la fecha actual
+    periods_query = session.query(Period).filter(
+    Period.year == year,
+    Period.is_deleted == False,
+    Period.period_type == type_period,
+    datetime.now() >  Period.period_start
+    ).all()
+    # Define start_date and end_date for the given year
+    start_date = date(year, 1, 1)
+    end_date = date(year, 12, 31)
+
+    all_times_query = session.query(Time).select_from(Time).filter(
+    Time.pay_date >= start_date, Time.pay_date <= end_date, Time.employer_id == employers_id
+    ).all()
+    total = 0
+    for time_entry  in all_times_query:
         
-        employer_query = session.query(Employers).filter(Employers.id == employers_id).first()
-        if not employer_query:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employer not found")
-        type_period = 0
-        # Obtener el period_id del payment_type del modelo time
-        if (employer_query.period_norma == 1):
-            type_period = PeriodType.WEEKLY
-        elif (employer_query.period_norma == 2):
-            type_period = PeriodType.BIWEEKLY
-        elif (employer_query.period_norma == 4):
-            type_period = PeriodType.MONTHLY
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment type not found")
+        if (time_entry.medical_insurance == None):
+            time_entry.medical_insurance = 0
         
-        # Consulta para obtener todos los periodos del año 2024 y con period_start mayor que la fecha actual
-        periods_query = session.query(Period).filter(
-        Period.year == year,
-        Period.is_deleted == False,
-        Period.period_type == type_period,
-        datetime.now() >  Period.period_start
-        ).all()
-
-        # Consulta para obtener todos los empleados
-        employers_query = session.query(Employers).filter(Employers.company_id == company_id).all()
-        taxes_query = session.query(Taxes).filter(Taxes.company_id == company_id).all()
-
-        # Consulta con joins para obtener todos los datos necesarios
-        results = (session.query(Companies, Employers, Time, Taxes)
-        .select_from(Companies)
-        .join(Employers, Employers.company_id == Companies.id)
-        .join(Time, Time.employer_id == Employers.id, isouter=True)  # LEFT JOIN
-        .join(Taxes, Taxes.company_id == Companies.id , isouter=True)
-        .filter(Companies.id == company_id)
-        .filter(Employers.id == employers_id)
-        .all())
-
-        # Consulta para obtener todos los payments
-        payments_query = session.query(Payments).filter(
-        Payments.time_id.in_([t.id for row in results if row[2] for t in [row[2]]])
-        ).all()
-
-        if not results:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found")
-
-        # Organizar los datos en un formato estructurado
-        times_data = []
-        taxes_data = []
-        payments_data = {}
-
-        for row in results:
-            companies, employers, time, taxes = row
             
-            # Añadir tiempos
-            if time:
-                times_data.append(time)
+        total_income =  time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.holyday_pay  + time_entry.commissions + time_entry.concessions + time_entry.tips + time_entry.refund
 
-            # Añadir impuestos
-            taxes_data.append(taxes)
+        
+    
 
-        # Organizar payments por time_id
-        for payment in payments_query:
-            if payment.time_id not in payments_data:
-                payments_data[payment.time_id] = []
-            payments_data[payment.time_id].append({
-                "id": payment.id,
-                "name": payment.name,
-                "amount": payment.amount,
-                "value": payment.value,
-                "is_active": payment.is_active,
-                "required": payment.required,
-                "type_taxe": payment.type_taxe,
-                "type_amount": payment.type_amount,
-                "is_deleted": payment.is_deleted,
-                "deleted_at": payment.deleted_at,
-                "created_at": payment.created_at,
-                "update_at": payment.update_at
-            })
+        total_egress =(
+            time_entry.medical_insurance +
+            time_entry.choferil +
+            time_entry.inability +
+            time_entry.medicare +
+            time_entry.aflac +
+            time_entry.secure_social +
+            time_entry.social_tips +
+            time_entry.tax_pr
 
-        # Crear una lista de periodos, algunos podrían no tener datos de Time
-        periods_data = [
-            {
-                "year": period.year,
-                "period_number": period.period_number,
-                "period_start": period.period_start,
-                "period_end": period.period_end,
-                "period_type": period.period_type,
-                "is_deleted": period.is_deleted,
-                "id": period.id,
-                "created_at": period.created_at,
-                "deleted_at": period.deleted_at,
-                "update_at": period.update_at,
-                "times": [
-                    {
-                        **t.__dict__,
-                        "payment": payments_data.get(t.id, [])
-                    }
-                    for t in times_data if t.period_id == period.id
-                ]
-            }
-            for period in periods_query
-        ]
-       
+        )
 
-        # Calcular la sumatoria de tiempos por empleado
-        total_times_by_employee = calculate_total_times(periods_data)
+        total += total_income -total_egress
 
-        return {
-            "ok": True,
-            "msg": "",
-            "result": {
-                "company": companie_query,
-                "employer": employer_query,
-                "periods": periods_data,
-                "taxes": taxes_query,
-                "employers": employers_query,
-                "total_times_by_employee": total_times_by_employee
-            },
+    # Consulta para obtener todos los empleados
+    employers_query = session.query(Employers).filter(Employers.company_id == company_id).all()
+    taxes_query = session.query(Taxes).filter(Taxes.company_id == company_id).all()
+
+    # Consulta con joins para obtener todos los datos necesarios
+    results = (session.query(Companies, Employers, Time, Taxes)
+    .select_from(Companies)
+    .join(Employers, Employers.company_id == Companies.id)
+    .join(Time, Time.employer_id == Employers.id, isouter=True)  # LEFT JOIN
+    .join(Taxes, Taxes.company_id == Companies.id , isouter=True)
+    .filter(Companies.id == company_id)
+    .filter(Employers.id == employers_id)
+    .all())
+
+    # Consulta para obtener todos los payments
+    payments_query = session.query(Payments).filter(
+    Payments.time_id.in_([t.id for row in results if row[2] for t in [row[2]]])
+    ).all()
+
+    if not results:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found")
+
+    # Organizar los datos en un formato estructurado
+    times_data = []
+    taxes_data = []
+    payments_data = {}
+
+    for row in results:
+        companies, employers, time, taxes = row
+        
+        # Añadir tiempos
+        if time:
+            times_data.append(time)
+
+        # Añadir impuestos
+        taxes_data.append(taxes)
+
+    # Organizar payments por time_id
+    for payment in payments_query:
+        if payment.time_id not in payments_data:
+            payments_data[payment.time_id] = []
+        payments_data[payment.time_id].append({
+            "id": payment.id,
+            "name": payment.name,
+            "amount": payment.amount,
+            "value": payment.value,
+            "is_active": payment.is_active,
+            "required": payment.required,
+            "type_taxe": payment.type_taxe,
+            "type_amount": payment.type_amount,
+            "is_deleted": payment.is_deleted,
+            "deleted_at": payment.deleted_at,
+            "created_at": payment.created_at,
+            "update_at": payment.update_at
+        })
+
+    # Crear una lista de periodos, algunos podrían no tener datos de Time
+    periods_data = [
+        {
+            "year": period.year,
+            "period_number": period.period_number,
+            "period_start": period.period_start,
+            "period_end": period.period_end,
+            "period_type": period.period_type,
+            "is_deleted": period.is_deleted,
+            "id": period.id,
+            "created_at": period.created_at,
+            "deleted_at": period.deleted_at,
+            "update_at": period.update_at,
+            "times": [
+                {
+                    **t.__dict__,
+                    "payment": payments_data.get(t.id, [])
+                }
+                for t in times_data if t.period_id == period.id
+            ]
         }
+        for period in periods_query
+    ]
+    
 
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Se ha producido un error {str(e)}")
-    finally:
-        session.close()
+    # Calcular la sumatoria de tiempos por empleado
+    total_times_by_employee = calculate_total_times(periods_data)
+
+    return {
+        "ok": True,
+        "msg": "",
+        "result": {
+            "company": companie_query,
+            "total" : total,
+            "employer": employer_query,
+            "periods": periods_data,
+            "taxes": taxes_query,
+            "employers": employers_query,
+            "total_times_by_employee": total_times_by_employee
+        },
+    }
+
+    
 
 
 def get_talonario_controller(user, company_id, employers_id, period_id):

@@ -28,9 +28,9 @@ outemployers_router = APIRouter()
 async def create_employer(employer_data: OutEmployersSchema, company_id : int):    
     return create_employer_controller(employer_data, company_id)
 
-@outemployers_router.get("/time/{company_id}/{employers_id}")
-async def get_all_company_and_employer(user: user_dependency,company_id: int,employers_id: int):    
-   return get_all_company_and_employer_controller(user,company_id,employers_id)
+@outemployers_router.get("/time/{company_id}/{employers_id}/{year}")
+async def get_all_company_and_employer(user: user_dependency,company_id: int,employers_id: int,year: int):    
+   return get_all_company_and_employer_controller(user,company_id,employers_id,year)
    
   
 @outemployers_router.get("/{company_id}")

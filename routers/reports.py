@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from controllers.reports_controller import counterfoil_by_range_controller,all_counterfoil_controller, counterfoil_controller, form_940_pdf_controller, form_choferil_pdf_controller, form_unemployment_pdf_controller, form_withheld_499_pdf_controller, get_report_cfse_pdf_controller, form_w2pr_pdf_controller, form_941_pdf_controller, form_943_pdf_controller ,counterfoil_by_period_controller, form_wages_txt_controller ,get_w2p_txt_controller , form_bonus_pdf_controller ,get_w2psse_txt_controller , get_report_bonus_pdf_controller
+from controllers.reports_controller import outemployer_counterfoil_by_range_controller, out_counterfoil_controller, counterfoil_by_range_controller,all_counterfoil_controller, counterfoil_controller, form_940_pdf_controller, form_choferil_pdf_controller, form_unemployment_pdf_controller, form_withheld_499_pdf_controller, get_report_cfse_pdf_controller, form_w2pr_pdf_controller, form_941_pdf_controller, form_943_pdf_controller ,counterfoil_by_period_controller, form_wages_txt_controller ,get_w2p_txt_controller , form_bonus_pdf_controller ,get_w2psse_txt_controller , get_report_bonus_pdf_controller
 from database.config import session
 from models.companies import Companies
 from models.employers import Employers
@@ -66,7 +66,11 @@ class CompanyRange(BaseModel):
     start: datetime
     end: datetime
 
-
+class OutCompanyRange(BaseModel):
+    company_id: int | None
+   
+    start: datetime
+    end: datetime
 
 @report_router.get("/counterfoil1/{company_id}/{period_id}")
 async def all_counterfoil(company_id: int, period_id: int):
@@ -75,6 +79,9 @@ async def all_counterfoil(company_id: int, period_id: int):
 
 
 
+@report_router.post("/wages/outemployer/range")
+async def counterfoil_by_range(companyRange: OutCompanyRange):
+    return outemployer_counterfoil_by_range_controller(companyRange.company_id, companyRange.start,companyRange.end)
 
 @report_router.post("/wages/range")
 async def counterfoil_by_range(companyRange: CompanyRange):
@@ -84,10 +91,14 @@ async def counterfoil_by_range(companyRange: CompanyRange):
 async def counterfoil_by_period(company_id: int, employer_id: int, period_id: int):
     return counterfoil_by_period_controller(company_id, employer_id, period_id)
 
+@report_router.get("/Outcounterfoil/{company_id}/{employer_id}/{time_id}/{year}")
+async def counterfoil(company_id: int, employer_id: int, time_id: int,year : int):
+    return out_counterfoil_controller(company_id, employer_id, time_id,year)
+
+
 @report_router.get("/counterfoil/{company_id}/{employer_id}/{time_id}")
 async def counterfoil(company_id: int, employer_id: int, time_id: int):
     return counterfoil_controller(company_id, employer_id, time_id)
-
 
 @report_router.post("/form_940_pdf")
 async def form_940_pdf(companyYear: CompanyYear):
@@ -104,6 +115,11 @@ async def form_941_pdf(companyYear: CompanyYear):
 @report_router.post("/bonus_pdf")
 async def form_943_pdf(companyBonus: CompanyBonus):
     return get_report_bonus_pdf_controller(companyBonus.company_id, companyBonus.year, companyBonus.bonus)
+
+
+@report_router.post("/vacation")
+async def form_943_pdf(companyBonus: CompanyBonus):
+    return get_report_vacation_pdf_controller(companyBonus.company_id, companyBonus.year, companyBonus.bonus)
 
 @report_router.post("/form_943_pdf")
 async def form_943_pdf(companyYear: CompanyYear):

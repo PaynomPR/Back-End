@@ -5,8 +5,8 @@ from datetime import date
 class OutTimeShema(BaseModel):
     regular_hours: str 
     regular_min: str  
-
-   
+    pay_date  : date
+    year: int
     regular_pay: float
 
     detained: float

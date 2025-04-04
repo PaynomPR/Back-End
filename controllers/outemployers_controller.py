@@ -64,11 +64,11 @@ def create_employer_controller(employer_data, company_id):
         session.close()
 
 
-def get_all_company_and_employer_controller(user,company_id,employers_id):
+def get_all_company_and_employer_controller(user,company_id,employers_id,year):
     try: 
         companies_query = session.query(OutEmployers, Companies).join(Companies, onclause=Companies.id == company_id).filter(Companies.code_id == user["code"], OutEmployers.id == employers_id).first()
         employer, company = companies_query # Desempaquetar la tupla  
-        simple_query = session.query(TimeOutEmployer).filter(TimeOutEmployer.employer_id == employers_id).all()
+        simple_query = session.query(TimeOutEmployer).filter(TimeOutEmployer.employer_id == employers_id, TimeOutEmployer.year == year).all()
         outemployer_query = session.query(OutEmployers).join(Companies).filter(OutEmployers.company_id == company_id, Companies.id == OutEmployers.company_id,Companies.code_id == user["code"]).all()
         return {"ok": True, "msg": "", "result": {"company": company, "employer": employer,"time": simple_query,"employers": outemployer_query}}
     except Exception as e:

@@ -18,11 +18,13 @@ class  TimeOutEmployer(Base):
     regular_min: Mapped[str] = mapped_column(nullable=True,default=0)
     regular_pay: Mapped[float] = mapped_column(nullable=True,default=0)
     detained: Mapped[float] = mapped_column(nullable=True,default=0)
+    pay_date: Mapped[Date] = mapped_column(Date, nullable=True)
 
     employer_id: Mapped[int] = mapped_column(
         Integer(), ForeignKey("outemployers.id"), nullable=True, index=True
     )
     employer = relationship("OutEmployers", back_populates="time")
+    year: Mapped[int] = mapped_column(nullable=True, default=0)
 
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=True)
     deleted_at: Mapped[TIMESTAMP] = mapped_column(

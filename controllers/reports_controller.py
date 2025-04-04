@@ -18,6 +18,8 @@ from models.companies import Companies
 from models.employers import Employers
 from models.periods import Period
 from models.time import Time
+from models.time_outemployer import TimeOutEmployer
+
 from models.payments import Payments
 from models.queries.queryFormW2pr import queryFormW2pr
 from utils.time_func import minutes_to_time, time_to_minutes
@@ -41,7 +43,240 @@ from models.queries.queryUtils import   getAmountCSFECompany , getBonusCompany
 
 report_router = APIRouter()
 
+def outemployer_counterfoil_by_range_controller(company_id, start,end):
+    
+    # Obtener la información de la empresa
+    company = session.query(Companies).filter(Companies.id == company_id).first()    
 
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Compañoa no encontrada"
+        )
+    
+    start_date = datetime.fromisoformat(str(start))
+    end_date = datetime.fromisoformat(str(end))
+    
+    # Set the start time to the beginning of the day (00:00:00)
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Set the end time to the end of the day (23:59:59)
+    end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+    
+    all_times_query = session.query(TimeOutEmployer, Employers).select_from(TimeOutEmployer).join(Employers, Employers.id == TimeOutEmployer.employer_id).filter(
+        TimeOutEmployer.pay_date >= start_date, TimeOutEmployer.pay_date <= end_date, Employers.company_id == company_id
+    ).all()
+
+    employee_data = defaultdict(lambda: {'info': {}, 'payments': [], 'total': 0})  # Changed structure
+    grand_total = 0
+    # Define the desired order of keys
+    desired_order = [
+        'regular_pay', 'detained'
+    ]
+    for time_entry, employer  in all_times_query:
+        employee_id = employer.id
+        
+        # Store employee info only once
+        if 'nombre' not in employee_data[employee_id]['info']:  # Check if already added
+            employee_data[employee_id]['info'] = {
+                'nombre': employer.first_name,
+                'apellido': employer.last_name,
+                'number_ss': f"***-**-{employer.social_security_number[-4:]}" if employer.social_security_number else "", 
+
+                
+            }
+        total_income =  time_entry.regular_pay
+
+        
+    
+
+        total_egress =(
+                        time_entry.detained
+
+        )
+
+        total = total_income -total_egress
+        
+        
+        # Append *all* relevant payment and other details
+        employee_data[employee_id]['payments'].append({
+            "date": time_entry.pay_date.strftime("%Y/%m/%d"),
+
+            'regular_pay': round(time_entry.regular_pay,2),
+            
+            'detained': round(time_entry.detained,2),
+           
+            "total": round(total,2),
+            # ... Add any other fields from the Time model as needed
+        })
+
+        employee_total = total  # Calculate total for this entry
+        employee_data[employee_id]['total'] += employee_total  # Add to employee's total
+        grand_total += total  # Use total_payment for the sum
+
+
+    # Prepare data for templating (including totals)
+    employee_data_list = []
+    for employee_id, data in employee_data.items():
+        employee_totals = defaultdict(int)  # Totals for this employee
+        for payment in data['payments']:
+            for key, value in payment.items():
+                if key != "date" and isinstance(value, (int, float, Decimal)):
+                    employee_totals[key] += round(value,2)
+
+        # Check for columns with all zeros and exclude them
+        
+        non_zero_keys = [key for key, value in employee_totals.items() if value != 0 and key != "date"]
+        data['totals'] = {k: v for k, v in employee_totals.items() if k in non_zero_keys or k == "date"} #always include date in totals
+
+        data['payments'] = [
+            {k: v for k, v in payment.items() if k in non_zero_keys or k == "date" or k == "total"} #always include date and total
+
+            for payment in data['payments']
+        ]
+        employee_data_list.append(data)
+
+    grand_totals = OrderedDict()  # Totals for all employees
+
+
+    for employee in employee_data_list: # Calculate grand totals from each employee total.
+        for key, value in employee["totals"].items():
+            if key not in grand_totals:
+                grand_totals[key] = 0
+            grand_totals[key] += round(value,2)
+                
+    grand_totals = {k: v for k, v in grand_totals.items() if v != 0} # Filters out the zero columns
+    
+    # Reorder the keys in the grand_totals dictionary
+    reordered_grand_totals = OrderedDict()
+    for key in desired_order:
+        if key in grand_totals:
+            reordered_grand_totals[key] = grand_totals[key]
+    for key, value in grand_totals.items():
+        if key not in desired_order:
+            reordered_grand_totals[key] = value
+    grand_totals = reordered_grand_totals
+
+    info = {
+        "data": employee_data_list,
+        "grand_totals": grand_totals,  # Add grand totals to the template context
+    }
+
+    
+    
+    # Jinja2 Template (Corrected for consistent two decimal formatting)
+    template_html = """
+ <!DOCTYPE html>
+ <html lang="es">
+  <head>
+   <style>
+    @page { 
+        size: landscape;
+        margin: 5mm; /* Reduced margins on all sides */
+     }
+    body { 
+        font-family: sans-serif; 
+        font-size: 9.5px; /* Slightly reduced font size */
+        margin: 0; /* Remove default body margins */
+     }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        table-layout: fixed; 
+        margin-bottom: 5px; /* Reduced margin below tables */
+     }
+    th, td { 
+        border: 1px solid #ddd; 
+        padding: 2px; /* Reduced padding inside table cells */
+        text-align: left; 
+        word-wrap: break-word; 
+     }
+     h3 {
+        margin-bottom: 5px; /*reduce the margin beteween h3 and table */
+     }
+
+    .employee-section { 
+        page-break-inside: avoid; /* Prevents breaking an employee section across pages */
+        margin-bottom: 10px; /* Reduced margin between employee sections */
+    }
+</style>
+ </head>
+ <body>
+     {% for employee in data %}
+        <div class="employee-section">
+            <h3>{{ employee.info.nombre }} {{ employee.info.apellido }} ({{ employee.info.number_ss }})</h3>
+            <table>
+                <thead>
+                    <tr>
+                         {% if "date" in employee.payments[0] %}   <!-- Check if "date" exists -->
+                            <th>Date</th>  <!-- Always include Date header -->
+                        {% endif %}
+                        {% for key in employee.payments[0].keys() if key != "total" and key != "date" and grand_totals.get(key, 0) != 0 %}
+                            <th>{{ key.replace('_', ' ').title() }}</th>
+                        {% endfor %}
+                        <th>Total</th>  <!-- Added total header-->
+                    </tr>
+                </thead>
+                 <tbody>
+                {% for payment in employee.payments %}
+                   <tr>
+                        {% if "date" in payment %}
+                            <td>{{ payment.date }}</td>  <!-- Always display the date -->
+                        {% endif %}
+                        {% for key, value in payment.items() if key != "total" and key != "date" and grand_totals.get(key, 0) != 0 %}
+                           <td>{{ "{:.2f}".format(value) }}</td> <!-- Format here -->
+                        {% endfor %}
+                        <td>{{ "{:.2f}".format(payment.total) }}</td>  <!-- Total for each payment line-->
+                     </tr>
+                {% endfor %}
+                    <tr>  <!-- Totals row for each employee-->
+                       <td>Sub Total</td>
+                        {% for key, value in employee.totals.items() if key != "total" and key != "date" and grand_totals.get(key, 0) != 0 %}
+                           <td>{{ "{:.2f}".format(value) }}</td>  <!--Format here-->
+                         {% endfor %}
+                         <td>{{ "{:.2f}".format(employee.total) }}</td>  <!-- total value -->
+                    <tr>
+                 </tbody>
+            </table>
+         </div>
+     {% endfor %}
+    <h3>Totales</h3>
+     <table>
+         <thead>
+             <tr>
+               <th>Totales</th>
+                  {% for key in grand_totals if key != "total" %}
+                    <th>{{ key.replace('_', ' ').title() }}</th>
+                    {% endfor %}
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                <td>Total</td> <!-- total value -->
+                    {% for key, value in grand_totals.items() if key != "total" %}
+                        <td>{{ "{:.2f}".format(value) }}</td>  <!-- Format here -->
+                    {% endfor %}
+                    <td>{{ "{:.2f}".format(grand_totals.total) }}</td> <!-- total value -->
+                </tr>
+            </tbody>
+        </table>  
+    </body>
+    </html>
+    """
+
+    template = Template(template_html)
+    rendered_html = template.render(info)
+
+    # Generar el PDF usando WeasyPrint
+    pdf_file = "pdf_wage.pdf"
+    HTML(string=rendered_html).write_pdf(pdf_file)
+
+    return FileResponse(
+        pdf_file,
+        media_type="application/pdf",
+        filename="pdf_cfse.pdf"
+    )
 
 def counterfoil_by_range_controller(company_id, employer_id,start,end):
     
@@ -1189,7 +1424,275 @@ Gastos Reembolsados:</td>
         media_type="application/pdf",
         filename="Talonario_de_Pagos.pdf"
     )
+def out_counterfoil_controller(company_id, employer_id, time_id,year):
     
+    # Obtener la información de la empresa
+        
+    company = session.query(Companies).filter(Companies.id == company_id).first()
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Compañoa no encontrada"
+        )
+
+    # Obtener la información del empleado
+    employer = session.query(Employers).filter(Employers.id == employer_id).first()
+    if not employer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Empleado no encontrado"
+        )
+
+    # Función para convertir una cadena de tiempo a minutos
+    def time_to_minutes(time_str):
+     
+        hours, minutes = map(int, time_str.split(':'))
+        return hours * 60 + minutes
+        
+    date_start = date(year, 1, 1)
+    # employer time
+    time_query = session.query(TimeOutEmployer).filter(TimeOutEmployer.id == time_id).first()
+    all_time_query = session.query(func.sum(TimeOutEmployer.regular_pay).label("total_regular_pay"),
+                    func.sum(TimeOutEmployer.detained).label("total_detained")).filter(TimeOutEmployer.pay_date >= date_start,TimeOutEmployer.pay_date <= time_query.pay_date,TimeOutEmployer.employer_id == employer_id,TimeOutEmployer.year == year).group_by(TimeOutEmployer.employer_id).all()
+    info = {
+        # EMPLOYERS INFO
+        "first_name": employer.first_name,
+        
+        "last_name": employer.last_name,
+        "employer_address": employer.address,
+        "employer_state": employer.address_state,
+                "employer_country": COUNTRY[int(employer.address_country)-1],
+
+        "employer_address_number": employer.address_number,
+        "employer_phone": employer.phone_number,
+        "social_security_number": employer.social_security_number,
+        #PERIOD INFO
+        "actual_date": time_query.pay_date.strftime("%Y/%m/%d"),
+   
+        # COMPANY INFO
+        "company": company.name,
+        "physical_address": company.physical_address,
+        #company address
+            "company_address": company.postal_address,
+            "company_state": company.state_postal_addess,
+            "company_country": COUNTRY[int(company.country_postal_address)-1],
+            "company_address_number": company.zipcode_postal_address,
+
+        "regular_pay": time_query.regular_pay,
+        "detained": time_query.detained,
+        "total1" : time_query.regular_pay - time_query.detained,
+        "total_regular_pay" : all_time_query[0].total_regular_pay,
+        "total_detained" : all_time_query[0].total_detained,
+        
+        # TOTAL INFO
+        "total": all_time_query[0].total_regular_pay - all_time_query[0].total_detained
+    }
+
+
+    # Plantilla HTML
+    template_html = """
+        <!DOCTYPE html>
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Recibo de Pago</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 10px; /* Tamaño de fuente más pequeño */
+                    margin: 0;
+                    background-color: #fff;
+                    color: #000;
+                }
+                    .cheque {
+    border: 2px solid black;
+    padding: 20px;
+    margin-top: 10px;
+
+}
+.titulo-cheque {
+    font-weight: bold;
+    font-size: 24px;
+    text-align: center;
+}
+                .container {
+                    width: 100%;
+
+                    border: 1px solid #000;
+                    padding: 12px;
+                    box-sizing: border-box;
+                }
+                .header {
+                    margin-bottom: 20px;
+                }
+                .header p {
+                    margin:  0;
+                }
+                .flex-container {
+                    display: flex;
+                    justify-content: space-between;
+                }
+                table{
+                    width: 100%;}
+                .section {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 20px;
+                }
+                .column {
+                    width: 33%;
+                    padding: 10px;
+                    box-sizing: border-box;
+                }
+                .cheque  .column {
+                    width:50%; }
+                .totals {
+                    text-align: right;
+                }
+                .totals p {
+                    font-size: 1.2em;
+                    font-weight: bold;
+                }
+                .grid-container {
+                    display: grid;
+                    grid-template-columns: auto auto;
+                    column-gap: 20px;
+                }
+                .grid-container p {
+                    margin: 5px 0;
+                }
+                .grid-container p.amount {
+                    text-align: right;
+                }
+                .middle-column, .year-column {
+                    width: 10%;
+                    padding: 10px;
+                    box-sizing: border-box;
+                    margin-left: -30px;
+                }
+                .middle-column h4, .year-column h4 {
+                    text-align: center;
+                }
+                .year-column p {
+                    text-align: right;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+
+
+                    <div class="flex-container">
+                        <div class="column">
+                        <p>{{ company }}</p>
+                    <p>Fecha: {{ actual_date }}</p>
+                            <p>{{ first_name }} {{ last_name }}</p>
+                            <p>{{ employer_address }}</p>
+                            <p>{{ employer_country  }} {{ employer_state  }} {{ employer_address_number }}</p>
+                        </div>
+                        <div class="column">
+                            <p>{{ first_name }} {{ last_name }}</p>
+                            <p>NUMERO CHEQUE: </p>
+                             <p>{{ company }} {{ actual_date }}</p>
+                            <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="width: 100%;display: flex;flex-direction: row;">
+                    <div class="column">
+                <table >
+                   <tr>
+                        <th>WAGES</th>
+                        <th>CURR</th>
+                        <th>YEAR</th>
+                    </tr>
+                    <tr>
+                        <td>REG. PAY:</td>
+                        <td>${{ regular_pay }}</td>
+                        <td>${{total_regular_pay}}</td>
+                    </tr>
+                </table>
+                </div>
+                <div class="column">
+                <table >
+                     <tr>
+                        <th>WAGES</th>
+                        <th>CURR</th>
+                        <th>YEAR</th>
+                    </tr>
+                    <tr>
+                        <td>Detenido:</td>
+                        <td>${{ detained }}</td>
+                        <td>${{total_detained}}</td>
+                    </tr>
+
+                </table>
+                </div>
+                <div class="column">
+                <table >
+                 
+                    
+                    
+                    
+                </table>
+                </div>
+</div>
+
+                <div class="totals">
+                    <p>Total: ${{ total1 }}</p>
+                </div>
+
+                
+
+            
+            </div>
+                    <div class="cheque">
+<div>
+
+
+                    <div style="font-size: 14px;" class="flex-container">
+                        <div class="column" style="width: 70%;">
+
+
+
+                                                    <p > {{ company }}</p>
+                                                    <p>{{company_address}}</p>
+                                                    <p>{{company_country}} {{company_state}} {{company_address_number}}</p>
+
+                            <p style="margin-top: 24px;width: 100%;            ">PAY TO ORDER OF: <span style="border-bottom: 1px solid black;padding: 2px 16px 2px 16px;">      {{ first_name }} {{ last_name }}             </p>
+                        
+                    
+                            
+                            <p style="margin-top: 24px;">FOR: ________________</p>
+                            
+                        </div>
+                        <div class="column" style="text-align: right;width: 30%;">
+                            <p>Fecha: {{ actual_date }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ total1 }}</p>
+                            <p style="margin-top: 32px;">FOR: ________________</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                    
+
+    """
+
+    template = Template(template_html)
+    rendered_html = template.render(info)
+
+    # Generar el PDF usando WeasyPrint
+    pdf_file = "voucher_pago.pdf"
+    HTML(string=rendered_html).write_pdf(pdf_file)
+
+    return FileResponse(
+        pdf_file,
+        media_type="application/pdf",
+        filename="Talonario_de_Pagos.pdf"
+    )
 def counterfoil_by_period_controller(company_id, employer_id, period_id):
     
     # Obtener la información de la empresa

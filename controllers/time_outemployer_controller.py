@@ -30,6 +30,9 @@ def create_time_controller(time_data, employer_id):
             regular_hours = time_data.regular_hours,
             regular_min = time_data.regular_min,
             regular_pay = time_data.regular_pay,
+            pay_date = time_data.pay_date,
+            year = time_data.year,
+
             detained = time_data.detained,
             employer_id = employer_id
         )
@@ -96,6 +99,8 @@ def update_time_controller(time_id, time):
             
         time_query.regular_hours = time.regular_hours
         time_query.regular_min = time.regular_min
+        time_query.pay_date = time.pay_date
+        time_query.year = time.year
         time_query.detained = time.detained
         time_query.regular_pay = time.regular_pay
         session.add(time_query)
