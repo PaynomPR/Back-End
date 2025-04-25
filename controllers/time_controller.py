@@ -443,6 +443,9 @@ def update_time_controller(time_id, time):
     #employers.vacation_hours = int(employers.vacation_hours) + int(time_query.vacation_time.split(":")[0])
 
     # Actualizar los campos del modelo Time
+
+    if time_query.tax_pr_percent is not None:
+        time_query.tax_pr_percent = float(employer.payment_percentage.replace("%", ""))
     time_query.regular_time = time.regular_time
     time_query.over_time = time.over_time
     time_query.meal_time = time.meal_time
