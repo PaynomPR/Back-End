@@ -55,6 +55,7 @@ def calculete_service_year(date_admission):
 
 def getAgeEmployer(birthday):
     dateBirthday = datetime(int(birthday[0]), int(birthday[1]), int(birthday[2]))
-    dateToday = datetime.now()
-    age = dateToday.year - dateBirthday.year - ((dateToday.month, dateToday.day) < (dateBirthday.month, dateBirthday.day))
+    today = datetime.now()
+    endOfYear = datetime(today.year, 12, 31)
+    age = endOfYear.year - dateBirthday.year - ((endOfYear.month, endOfYear.day) < (dateBirthday.month, dateBirthday.day))
     return age

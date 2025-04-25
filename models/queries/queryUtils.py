@@ -50,7 +50,7 @@ def getTotalAmountAndExemptAmount(company_id, date_period):
         print("---------------------")
         print(payment[2])
         age = getAgeEmployer(birthday)
-        if age < 26:
+        if age <= 26:
           exempt_amount += payment[0]
         else:
           not_exempt_amount  += payment[0]
