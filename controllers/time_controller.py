@@ -444,7 +444,7 @@ def update_time_controller(time_id, time):
 
     # Actualizar los campos del modelo Time
 
-    if time_query.tax_pr_percent is not None:
+    if time_query.tax_pr_percent is None:
         time_query.tax_pr_percent = float(employer.payment_percentage.replace("%", ""))
     time_query.regular_time = time.regular_time
     time_query.over_time = time.over_time
