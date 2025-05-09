@@ -181,24 +181,9 @@ def get_all_company_and_employer_controller(user, company_id, employers_id,year)
             time_entry.medical_insurance = 0
         
             
-        total_income =  time_entry.regular_pay + time_entry.over_pay + time_entry.meal_pay + time_entry.vacation_pay + time_entry.sick_pay + time_entry.holyday_pay  + time_entry.commissions + time_entry.concessions + time_entry.tips + time_entry.refund
-
         
-    
 
-        total_egress =(
-            time_entry.medical_insurance +
-            time_entry.choferil +
-            time_entry.inability +
-            time_entry.medicare +
-            time_entry.aflac +
-            time_entry.secure_social +
-            time_entry.social_tips +
-            time_entry.tax_pr
-
-        )
-
-        total += total_income -total_egress
+        total += time_entry.inability
 
     # Consulta para obtener todos los empleados
     employers_query = session.query(Employers).filter(Employers.company_id == company_id).all()
