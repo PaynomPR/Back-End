@@ -1736,7 +1736,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
     
     date_start = date(year, 1, 1)
     # employer time
-    time_query = session.query(Time).filter(Time.period_id == period_id).first()
+    time_query = session.query(Time).filter(Time.id == time_period_query.Time.id, Time.employer_id == employer_id).first()
     all_time_query = session.query(func.sum(Time.salary).label("total_salary"),
                     func.sum(Time.others).label("total_others"),
                     func.sum(Time.vacation_pay).label("total_vacation_pay"),
@@ -1966,10 +1966,11 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         inability = time_query.inability
         choferil = time_query.choferil
         tax_pr = time_query.tax_pr
-
+        medical = 0
         aflac = time_query.aflac
-
-        return float(secure_social) + float(time_query.medicual_insurance) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
+        if (time_query.medical_insurance):
+            medical = time_query.medical_insurance
+        return float(secure_social) + float(medical) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
 
     def calculate_payments():
         amount = 0

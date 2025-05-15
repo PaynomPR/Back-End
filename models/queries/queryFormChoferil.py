@@ -34,8 +34,8 @@ def queryFormChoferil (company_id, year, periodo):
 
     data = {
         'text_date_end': company.choferil_number+" "+str(date_period['end']),
-        'text_total_weeks_paid': str(totalWeeks),
-        'text_total_tax_due': str(float(totalWeeks) * float(company.driver_rate)),
+        'text_total_weeks_paid': str(roundedAmount(totalWeeks)),
+        'text_total_tax_due': str(roundedAmount(float(totalWeeks) * float(company.driver_rate))),
         'text_payment_ampunt': '0',
         'text_position': '--',
         'company_info': company.name +"\n" + postalAddressCompany +", " + statePostalAddressCompany +", " + countryPostalAddressCompany + " " +zipcodePostalAddressCompany if company.name is not None else '',
