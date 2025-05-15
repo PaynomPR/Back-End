@@ -2901,7 +2901,7 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
         employee_dict = {
             "nombre": employee.first_name,
             "apellido": employee.last_name,
-            'number_ss': f"***-**-{employee.social_security_number[-4:]}" if employer.social_security_number else "",         
+            'number_ss': f"***-**-{employee.social_security_number[-4:]}" if employee.social_security_number else "",         
             "worked_hour": "",
             "bonus": 0,
             "categoria": "",  # Assuming these fields exist
