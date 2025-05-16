@@ -3064,7 +3064,7 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
     <td>{{ totals_wages.totals_2 }}</td>
     <td>{{ totals_wages.totals_3 }}</td>
     <td>{{ totals_wages.totals_4 }}</td>
-    <td>{{ {:.2f}".format(total) }}</td>
+    <td>{{ "{:.2f}".format(total) }}</td>
     <td>{{ total_bonus }}</td>
 </tr>
                     
@@ -3235,7 +3235,7 @@ def get_report_cfse_pdf_controller(company_id, year, period):
     <td>{{ employee.trimestre_2  }}</td>
     <td>{{ employee.trimestre_3  }}</td>
     <td>{{ employee.trimestre_4  }}</td>
-    <td>{{ employee.Total }}</td>
+    <td>{{ "{:.2f}".format(employee.Total) }}</td>
 </tr>
 {% endfor %}
                     
