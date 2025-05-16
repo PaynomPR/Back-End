@@ -2,7 +2,7 @@ from datetime import datetime
 from calendar import timegm
 from models.queries.queryUtils import roundedAmount, getAmountVarios, getEmployer, getAmountVariosByCompany ,getCompany
 from utils.time_func import getAgeEmployer
-
+from utils.country import COUNTRY
 
 def queryFormW2pr(employer_id, year = None):
   try:
@@ -52,19 +52,21 @@ def queryFormW2pr(employer_id, year = None):
     # Address Company
     physicalAddressCompany = company.physical_address if company.physical_address is not None else ''
     statePhysicalAddressCompany = company.state_physical_address if company.state_physical_address is not None else ''
-    countryPhysicalAddressCompany = company.country_physical_address if company.country_physical_address is not None else ''
+    countryPhysicalAddressCompany = COUNTRY[int(company.country_physical_address)-1] if company.country_physical_address is not None else ''
+    zipcodePhysicalAddressCompany = company.zipcode_physical_address if company.zipcode_physical_address is not None else ''
 
+    
     n_control = company.w2_first_control
 
     data = {
-      'name_first_user': employer.first_name if employer.first_name is not None else '',
-      'name_last_user': employer.last_name if employer.last_name is not None else '',
-      'address_user': employer.address if employer.address is not None else '',
+      'name_first_user': employer.first_name +" "+   employer.middle_name if employer.first_name is not None else '',
+      'name_last_user': employer.last_name +" "+ employer.mother_last_name if employer.last_name is not None else '',
+      'address_user': employer.address + " " + employer.address_state + " " +  COUNTRY[int(employer.address_country)-1] + " " + employer.address_number if employer.address is not None else '',
       'date_birth_day': birthday[2],
       'date_birth_month': birthday[1],
       'date_birth_year': birthday[0],
       'name_company': company.name if company.name is not None else '',
-      'address_company': f'{physicalAddressCompany}, {statePhysicalAddressCompany}, {countryPhysicalAddressCompany}',
+      'address_company': f'{physicalAddressCompany}, {statePhysicalAddressCompany}, {countryPhysicalAddressCompany}, {zipcodePhysicalAddressCompany}',
       'phone_company': company.phone_number if company.phone_number is not None else '',
       'email_company': company.email if company.email is not None else '',
       'social_security_no': employer.social_security_number if employer.social_security_number is not None else '',

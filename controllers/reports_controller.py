@@ -16,6 +16,7 @@ from datetime import date
 from database.config import session
 from models.companies import Companies
 from models.employers import Employers
+from models.outemployers import OutEmployers
 from models.periods import Period
 from models.time import Time
 from models.time_outemployer import TimeOutEmployer
@@ -63,9 +64,9 @@ def outemployer_counterfoil_by_range_controller(company_id, start,end):
     # Set the end time to the end of the day (23:59:59)
     end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
     
-    all_times_query = session.query(TimeOutEmployer, Employers).select_from(TimeOutEmployer).join(Employers, Employers.id == TimeOutEmployer.employer_id).filter(
-        TimeOutEmployer.pay_date >= start_date, TimeOutEmployer.pay_date <= end_date, Employers.company_id == company_id
-    ).all()
+    all_times_query = session.query(TimeOutEmployer, OutEmployers).select_from(TimeOutEmployer).join(OutEmployers, OutEmployers.id == TimeOutEmployer.employer_id and OutEmployers.company_id == company_id ).filter(
+        TimeOutEmployer.pay_date >= start_date, TimeOutEmployer.pay_date <= end_date, OutEmployers.company_id == company_id 
+    ).order_by(TimeOutEmployer.pay_date).all()
 
     employee_data = defaultdict(lambda: {'info': {}, 'payments': [], 'total': 0})  # Changed structure
     grand_total = 0
@@ -73,31 +74,20 @@ def outemployer_counterfoil_by_range_controller(company_id, start,end):
     desired_order = [
         'regular_pay', 'detained'
     ]
+    
     for time_entry, employer  in all_times_query:
         employee_id = employer.id
+        
         
         # Store employee info only once
         if 'nombre' not in employee_data[employee_id]['info']:  # Check if already added
             employee_data[employee_id]['info'] = {
                 'nombre': employer.first_name,
-                'apellido': employer.last_name,
-                'number_ss': f"***-**-{employer.social_security_number[-4:]}" if employer.social_security_number else "", 
-
-                
+                'apellido': employer.last_name     
             }
-        total_income =  time_entry.regular_pay
-
         
-    
-
-        total_egress =(
-                        time_entry.detained
-
-        )
-
-        total = total_income -total_egress
-        
-        
+      
+        total = round(time_entry.regular_pay,2) - round(time_entry.detained,2)
         # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({
             "date": time_entry.pay_date.strftime("%Y/%m/%d"),
@@ -106,9 +96,10 @@ def outemployer_counterfoil_by_range_controller(company_id, start,end):
             
             'detained': round(time_entry.detained,2),
            
-            "total": round(total,2),
+            "total": total,
             # ... Add any other fields from the Time model as needed
         })
+        
 
         employee_total = total  # Calculate total for this entry
         employee_data[employee_id]['total'] += employee_total  # Add to employee's total
@@ -158,6 +149,8 @@ def outemployer_counterfoil_by_range_controller(company_id, start,end):
     grand_totals = reordered_grand_totals
 
     info = {
+        "company_name" : company.name,
+        "date" : date.today().strftime("%Y-%m-%d"),
         "data": employee_data_list,
         "grand_totals": grand_totals,  # Add grand totals to the template context
     }
@@ -202,9 +195,13 @@ def outemployer_counterfoil_by_range_controller(company_id, start,end):
 </style>
  </head>
  <body>
+  <div style="display: flex;justify-content: space-between;">
+ <h1>{{company_name}} </h1>
+ <h1>{{date}}</h1>
+ </div>
      {% for employee in data %}
         <div class="employee-section">
-            <h3>{{ employee.info.nombre }} {{ employee.info.apellido }} ({{ employee.info.number_ss }})</h3>
+            <h3>{{ employee.info.nombre }} {{ employee.info.apellido }} </h3>
             <table>
                 <thead>
                     <tr>
@@ -257,7 +254,7 @@ def outemployer_counterfoil_by_range_controller(company_id, start,end):
                     {% for key, value in grand_totals.items() if key != "total" %}
                         <td>{{ "{:.2f}".format(value) }}</td>  <!-- Format here -->
                     {% endfor %}
-                    <td>{{ "{:.2f}".format(grand_totals.total) }}</td> <!-- total value -->
+                    <td>{{ grand_totals.total }}</td> <!-- total value -->
                 </tr>
             </tbody>
         </table>  
@@ -300,7 +297,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
     
     all_times_query = session.query(Time, Employers,Period).select_from(Period).join(Time, Period.id == Time.period_id).join(Employers, Employers.id == Time.employer_id).filter(
         Time.pay_date >= start_date, Time.pay_date <= end_date, Employers.company_id == company_id
-    ).all()
+    ).order_by(Time.pay_date).all()
 
     employee_data = defaultdict(lambda: {'info': {}, 'payments': [], 'total': 0})  # Changed structure
     grand_total = 0
@@ -348,7 +345,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
         # Append *all* relevant payment and other details
         employee_data[employee_id]['payments'].append({
             "date": time_entry.pay_date.strftime("%Y/%m/%d"),
-
+            
             'regular_pay': round(time_entry.regular_pay,2) - round(time_entry.others,2) - round(time_entry.bonus,2),
             
             'over_pay': round(time_entry.over_pay,2),
@@ -432,6 +429,9 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
     grand_totals = reordered_grand_totals
 
     info = {
+        "company_name" : company.name,
+        "date" : date.today().strftime("%Y-%m-%d"),
+
         "data": employee_data_list,
         "grand_totals": grand_totals,  # Add grand totals to the template context
     }
@@ -476,6 +476,10 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
 </style>
  </head>
  <body>
+ <div style="display: flex;justify-content: space-between;">
+ <h1>{{company_name}} </h1>
+ <h1>{{date}}</h1>
+ </div>
      {% for employee in data %}
         <div class="employee-section">
             <h3>{{ employee.info.nombre }} {{ employee.info.apellido }} ({{ employee.info.number_ss }})</h3>
@@ -1436,7 +1440,7 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
         )
 
     # Obtener la información del empleado
-    employer = session.query(Employers).filter(Employers.id == employer_id).first()
+    employer = session.query(OutEmployers).filter(OutEmployers.id == employer_id).first()
     if not employer:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1465,7 +1469,7 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
 
         "employer_address_number": employer.address_number,
         "employer_phone": employer.phone_number,
-        "social_security_number": employer.social_security_number,
+      
         #PERIOD INFO
         "actual_date": time_query.pay_date.strftime("%Y/%m/%d"),
    
@@ -1623,7 +1627,7 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
                         <th>YEAR</th>
                     </tr>
                     <tr>
-                        <td>Detenido:</td>
+                        <td>Retenido:</td>
                         <td>${{ detained }}</td>
                         <td>${{total_detained}}</td>
                     </tr>
