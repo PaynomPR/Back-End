@@ -3137,8 +3137,8 @@ def get_report_cfse_pdf_controller(company_id, year, period):
         for quarter_amount in quarter_amounts:
             
             if quarter_amount['employer_id'] == employee.id:
-                employee_dict[f"trimestre_{quarter_amount['period']}"] += round(quarter_amount['wages'])
-                employee_dict["Total"] += round(quarter_amount['wages'])
+                employee_dict[f"trimestre_{quarter_amount['period']}"] += round(quarter_amount['wages'],2)
+                employee_dict["Total"] += round(quarter_amount['wages'],2)
                 
 
         employee_data.append(employee_dict)
