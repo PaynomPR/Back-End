@@ -2959,7 +2959,7 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
         "commercial_register": company.commercial_register,
         "data": employee_data,
         "telefono": company.contact_number,
-        "total" : total,
+        "total" : round(total,2),
         "totals_wages" : totals_wages,
         "total_hours": total_hours,
         "total_bonus": round(total_bonus,2),
