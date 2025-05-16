@@ -3047,12 +3047,12 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
     <td>{{ employee.apellido }}</td>
     <td>{{ employee.number_ss }}</td>
     <td>{{ employee.worked_hour }}</td>
-    <td>{{ employee.trimestre_1  }}</td>
-    <td>{{ employee.trimestre_2  }}</td>
-    <td>{{ employee.trimestre_3  }}</td>
-    <td>{{ employee.trimestre_4  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_1)  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_2)  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_3)  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_4)  }}</td>
     <td>{{ "{:.2f}".format(employee.Total) }}</td>
-    <td>{{ employee.bonus }}</td>
+    <td>{{ "{:.2f}".format(employee.bonus) }}</td>
 </tr>
 {% endfor %}
 <tr>
@@ -3060,12 +3060,12 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
     <td>---------</td>
     <td>---------</td>
     <td>{{ total_hours }}</td>
-    <td>{{ totals_wages.totals_1 }}</td>
-    <td>{{ totals_wages.totals_2 }}</td>
-    <td>{{ totals_wages.totals_3 }}</td>
-    <td>{{ totals_wages.totals_4 }}</td>
+    <td>{{ "{:.2f}".format(totals_wages.totals_1) }}</td>
+    <td>{{ "{:.2f}".format(totals_wages.totals_2) }}</td>
+    <td>{{ "{:.2f}".format(totals_wages.totals_3) }}</td>
+    <td>{{ "{:.2f}".format(totals_wages.totals_4) }}</td>
     <td>{{ "{:.2f}".format(total) }}</td>
-    <td>{{ total_bonus }}</td>
+    <td>{{ "{:.2f}".format(total_bonus) }}</td>
 </tr>
                     
                 </tbody>
