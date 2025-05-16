@@ -1128,7 +1128,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
                     <tr>
                         <td>REG. PAY:</td>
                         <td>${{ regular_pay }}</td>
-                        <td>${{total_regular_pay}}</td>
+                        <td>${{ "{:.2f}".format(total_regular_pay)}}</td>
                     </tr>
                     <tr>
                         <td>VACATIONS:</td>
@@ -3231,10 +3231,10 @@ def get_report_cfse_pdf_controller(company_id, year, period):
     <td>{{ employee.nombre }}</td>
     <td>{{ employee.apellido }}</td>
     <td>{{ employee.categoria }}</td>
-    <td>{{ employee.trimestre_1  }}</td>
-    <td>{{ employee.trimestre_2  }}</td>
-    <td>{{ employee.trimestre_3  }}</td>
-    <td>{{ employee.trimestre_4  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_1)  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_2)  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_3)  }}</td>
+    <td>{{ "{:.2f}".format(employee.trimestre_4)  }}</td>
     <td>{{ "{:.2f}".format(employee.Total) }}</td>
 </tr>
 {% endfor %}
