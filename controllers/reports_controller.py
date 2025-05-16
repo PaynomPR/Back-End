@@ -2921,16 +2921,16 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
         for quarter_amount in quarter_amounts:
             
             if quarter_amount['employer_id'] == employee.id:
-                employee_dict[f"trimestre_{quarter_amount['period']}"] += quarter_amount['wages']
-                employee_dict["Total"] += quarter_amount['wages']
-                total += quarter_amount['wages']
-                totals_wages[f"totals_{quarter_amount['period']}"] += quarter_amount['wages']
+                employee_dict[f"trimestre_{quarter_amount['period']}"] +=  round(quarter_amount['wages'],2)
+                employee_dict["Total"] +=  round(quarter_amount['wages'],2)
+                total +=  round(quarter_amount['wages'],2)
+                totals_wages[f"totals_{quarter_amount['period']}"] +=  round(quarter_amount['wages'],2)
                 # Update total_worked_seconds
                 total_worked_seconds += quarter_amount['total_time']
                 
         employee_dict["bonus"] = round(employee_dict["Total"] * percent,2)    
         if employee_dict["bonus"] >=  max_amount:
-            employee_dict["bonus"] =  max_amount
+            employee_dict["bonus"] =   round(max_amount,2)
         
         # Convert total_worked_seconds to hours and minutes
         hours, remainder = divmod(total_worked_seconds, 3600)
