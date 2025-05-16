@@ -2972,7 +2972,7 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Reporte Planilla CFSE</title>
+            <title>Reporte Planilla Bonus</title>
             <style>
                 @page {
                     size: A4 landscape; /* Configura la página en orientación horizontal */
