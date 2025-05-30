@@ -14,6 +14,7 @@ class TimeShema(BaseModel):
     meal_time: str
     holiday_time: Optional[str]
     sick_time: Optional[str]
+    coda_plans: float = Field(ge=0, description="Debe ser un valor positivo")
     commissions: float = Field(ge=0, description="Debe ser un valor positivo")
     asume: float = Field(ge=0, description="Debe ser un valor positivo")
     aflac: float = Field(ge=0, description="Debe ser un valor positivo")
