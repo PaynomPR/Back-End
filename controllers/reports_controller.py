@@ -941,7 +941,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
 
         "asume" : time_query.asume,
         "coda_plans" : time_query.coda_plans,
-        "total_coda_plans" : all_time_query[0].coda_plans,
+        "total_coda_plans" : all_time_query[0].total_coda_plans,
 
 
 
