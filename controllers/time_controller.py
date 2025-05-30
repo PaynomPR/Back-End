@@ -166,6 +166,7 @@ def create_time_controller(time_data, employer_id):
         over_pay=time_data.overtime_pay,
         meal_pay=time_data.meal_time_pay,
         sick_pay=time_data.sick_pay,
+        coda_plans= time_data.coda_plans,
         holyday_pay=time_data.holyday_pay,  
         vacation_pay = time_data.vacation_pay,          
         employer_retained = withholdingValue,
@@ -449,6 +450,7 @@ def update_time_controller(time_id, time):
     time_query.regular_time = time.regular_time
     time_query.over_time = time.over_time
     time_query.meal_time = time.meal_time
+    time_query.coda_plans = time.coda_plans
     time_query.holiday_time = time.holiday_time
     time_query.sick_time = time.sick_time
     time_query.vacation_time = time.vacation_time

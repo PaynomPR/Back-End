@@ -15,7 +15,7 @@ class Time(Base):
     over_amount: Mapped[float] = mapped_column(nullable=True, default=0)
     meal_amount: Mapped[float] = mapped_column(nullable=True, default=0)
     salary : Mapped[float] = mapped_column(nullable=True)
-
+    coda_plans: Mapped[float] = mapped_column(nullable=True, default=0)
     regular_time: Mapped[str] = mapped_column(String, nullable=True, default="00:00")
     over_time: Mapped[str] = mapped_column(String, nullable=True, default="00:00")
     meal_time: Mapped[str] = mapped_column(String, nullable=True, default="00:00")

@@ -610,6 +610,8 @@ def counterfoil_controller(company_id, employer_id, time_id):
                     func.sum(Time.regular_pay).label("total_regular_pay"),
                     func.sum(Time.donation).label("total_donation"),
                     func.sum(Time.tips).label("total_tips"),
+                    func.sum(Time.coda_plans).label("total_coda_plans"),
+
                     func.sum(Time.aflac).label("total_aflac"),
                     func.sum(Time.inability).label("total_inability"),
                     func.sum(Time.choferil).label("total_choferil"),
@@ -836,7 +838,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
 
         aflac = time_query.aflac
 
-        return float(secure_social) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + (time_query.medical_insurance) + float(time_query.donation)
+        return float(secure_social) + float(time_query.coda_plans) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + (time_query.medical_insurance) + float(time_query.donation)
     # Function to add hours to HH:MM time string (new function)
     def add_hours_to_time(time_str, hours_to_add):
         try:
@@ -938,6 +940,10 @@ def counterfoil_controller(company_id, employer_id, time_id):
         
 
         "asume" : time_query.asume,
+        "coda_plans" : time_query.coda_plans,
+        "total_coda_plans" : all_time_query[0].coda_plans,
+
+
 
         "bonus": time_query.bonus,
         "aflac": time_query.aflac,
@@ -1219,6 +1225,11 @@ Gastos Reembolsados:</td>
                         <td>AFLAC:</td>
                         <td>${{ aflac }}</td>
                         <td>${{ total_aflac }}</td>
+                    </tr>
+                     <tr>
+                        <td>AFLAC:</td>
+                        <td>${{ coda_plans }}</td>
+                        <td>${{ total_coda_plans }}</td>
                     </tr>
    <tr>
                         <td>Plan Medico:</td>
