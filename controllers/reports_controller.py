@@ -3324,7 +3324,7 @@ def all_counterfoil_controller(company_id, period_id ):
 
         aflac = time_query.aflac
 
-        return float(secure_social) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
+        return float(secure_social) + float(time_query.coda_plans) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
 
     def calculate_payments():
         amount = 0
@@ -3389,6 +3389,7 @@ def all_counterfoil_controller(company_id, period_id ):
                     func.sum(Time.over_pay).label("total_over_pay"),
                     func.sum(Time.regular_pay).label("total_regular_pay"),
                     func.sum(Time.donation).label("total_donation"),
+                    func.sum(Time.coda_plans).label("total_coda_plans"),
                     func.sum(Time.tips).label("total_tips"),
                     func.sum(Time.aflac).label("total_aflac"),
                     func.sum(Time.inability).label("total_inability"),
@@ -3610,14 +3611,18 @@ def all_counterfoil_controller(company_id, period_id ):
             # query that is relevant for all time.
             all_time_query.total_regular_pay+all_time_query.total_over_pay+all_time_query.total_meal_pay+all_time_query.total_holyday_pay+all_time_query.total_sick_pay+all_time_query.total_vacation_pay+ all_time_query.total_tips+ all_time_query.total_commissions+ all_time_query.total_concessions, 2) ,
             
-            "total_col_2" : round(time_query.asume+time_query.donation+payment_amount+time_query.aflac-time_query.refund, 2) ,
-            "total_col_2_year" : round(all_time_query.total_asume+all_time_query.total_donation+total_payment_amount+all_time_query.total_aflac-all_time_query.total_refund, 2) ,
+            "total_col_2" : round(time_query.asume+time_query.coda_plans+time_query.donation+payment_amount+time_query.aflac-time_query.refund, 2) ,
+            "total_col_2_year" : round(all_time_query.total_coda_plans+all_time_query.total_asume+all_time_query.total_donation+total_payment_amount+all_time_query.total_aflac-all_time_query.total_refund, 2) ,
 
             "total_col_3" : round(time_query.tax_pr+time_query.secure_social+time_query.choferil+time_query.inability+time_query.medicare+time_query.social_tips, 2) ,
             "total_col_3_year" : round(all_time_query.total_tax_pr+all_time_query.total_ss+all_time_query.total_choferil+all_time_query.total_inability+all_time_query.total_medicare+all_time_query.total_social_tips, 2) ,
             
 
             "asume" : time_query.asume,
+            "coda_plans" : time_query.coda_plans,
+            "total_coda_plans" : round(all_time_query.total_coda_plans, 2) ,
+            
+
 
             "bonus": time_query.bonus,
             "aflac": time_query.aflac,
@@ -3925,6 +3930,11 @@ Gastos Reembolsados:</td>
                         <td>AFLAC:</td>
                         <td>${{ aflac }}</td>
                         <td>${{ total_aflac }}</td>
+                    </tr>
+                      <tr>
+                        <td>CODA PLANS:</td>
+                        <td>${{ coda_plans }}</td>
+                        <td>${{ total_coda_plans }}</td>
                     </tr>
 
                     
