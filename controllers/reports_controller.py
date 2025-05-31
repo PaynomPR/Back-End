@@ -1227,7 +1227,7 @@ Gastos Reembolsados:</td>
                         <td>${{ total_aflac }}</td>
                     </tr>
                      <tr>
-                        <td>AFLAC:</td>
+                        <td>CODA PLANS:</td>
                         <td>${{ coda_plans }}</td>
                         <td>${{ total_coda_plans }}</td>
                     </tr>
