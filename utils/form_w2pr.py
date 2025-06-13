@@ -401,7 +401,7 @@ def form_w2pr_pdf_generate():
               15. Aportaciones a Planes Calificados <br />
               Contributions to CODA PLANS:
             </p>
-            <p class="uppercase text-sm text-right">0,00</p>
+            <p class="uppercase text-sm text-right">{{ total_coda_plans }}</p>
           </div>
           <div class="border-b-2 py-1 border-black px-2">
             <p class="text-xs">

@@ -135,6 +135,8 @@ def getAmountVarios(employer_id, year, period = None):
       func.sum(Time.tips).label('tips'),
       func.sum(Time.donation).label('donation'),
       func.sum(Time.refund).label('refunds'),
+      func.sum(Time.coda_plans).label('coda_plans'),
+
       func.sum(Time.aflac).label('aflac'),
       func.sum(Time.medicare).label('medicares'),
       func.sum(Time.bonus).label('bonus'),

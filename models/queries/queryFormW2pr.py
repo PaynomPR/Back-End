@@ -23,6 +23,7 @@ def queryFormW2pr(employer_id, year = None):
     total_7 = 0
     total_wages = 0
     # Rounding amount to 2 decimal places
+    coda_plans= roundedAmount(amountVarios.coda_plans if amountVarios.coda_plans is not None else 0)
     rounded_amount_medicares = roundedAmount(amountVarios.medicares if amountVarios.medicares is not None else 0)
     rounded_amount_aflac = roundedAmount(amountVarios.aflac if amountVarios.aflac is not None else 0)
     rounded_amount_commissions = roundedAmount(amountVarios.commissions if amountVarios.commissions is not None else 0)
@@ -76,6 +77,7 @@ def queryFormW2pr(employer_id, year = None):
       'total_wages': total_wages,
       'total_wages_26': total_7,
       'code_26': 'E' if total_7 > 0 else '',
+      'total_coda_plans': coda_plans,
       'total_concessions': rounded_amount_concessions,
       'total_tips': rounded_amount_tips,
       'total_donation': rounded_amount_donation,

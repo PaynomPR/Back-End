@@ -305,7 +305,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
     desired_order = [
         'regular_pay', 'over_pay', 'meal_pay', 'vacation', 'sick_pay',
         'holyday_pay', 'bonus', 'commissions', 'concessions', 'Propinas',
-        'others', 'total_pay', 'tax_pr', 'secure_social', 'medicare',
+        'others', 'total_pay', 'tax_pr', 'secure_social', 'medicare','coda_plans',
         'disability', 'plan_medico', 'asume', 'aflac', 'donation',
         'social_tips', 'choferil', 'refund', "total"
     ]
@@ -1770,7 +1770,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
                     func.sum(Time.concessions).label("total_concessions"),
                     func.sum(Time.commissions).label("total_commissions"),
                     func.sum(Time.medical_insurance).label("total_medical_insurance"),
-
+                    func.sum(Time.coda_plans).label("total_coda_plans"),
                     func.sum(Time.bonus).label("total_bonus"),
                     func.sum(Time.refund).label("total_refund"),
                     func.sum(Time.medicare).label("total_medicare"),
@@ -1985,7 +1985,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         aflac = time_query.aflac
         if (time_query.medical_insurance):
             medical = time_query.medical_insurance
-        return float(secure_social) + float(medical) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
+        return float(secure_social) + float(medical)+ float(time_query.coda_plans) + float(ss_tips) + float(medicare) + float(inability) + float(choferil) + float(tax_pr)  + float(aflac) + float(time_query.asume) + float(time_query.donation)
 
     def calculate_payments():
         amount = 0
@@ -2064,15 +2064,16 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         "total_col_1" : round(time_query.regular_pay+time_query.over_pay+time_query.meal_pay+time_query.holyday_pay+time_query.sick_pay+time_query.vacation_pay+ time_query.tips+ time_query.commissions+ time_query.concessions, 2) ,
         "total_col_1_year" : round(all_time_query[0].total_regular_pay+all_time_query[0].total_over_pay+all_time_query[0].total_meal_pay+all_time_query[0].total_holyday_pay+all_time_query[0].total_sick_pay+all_time_query[0].total_vacation_pay+ all_time_query[0].total_tips+ all_time_query[0].total_commissions+ all_time_query[0].total_concessions, 2) ,
         
-        "total_col_2" : round(time_query.asume+time_query.donation+payment_amount+time_query.aflac-time_query.refund, 2) ,
-        "total_col_2_year" : round(all_time_query[0].total_asume+all_time_query[0].total_donation+total_payment_amount+all_time_query[0].total_aflac-all_time_query[0].total_refund, 2) ,
+        "total_col_2" : round(time_query.coda_plans+time_query.asume+time_query.donation+payment_amount+time_query.aflac-time_query.refund, 2) ,
+        "total_col_2_year" : round(all_time_query[0].total_coda_plans+all_time_query[0].total_asume+all_time_query[0].total_donation+total_payment_amount+all_time_query[0].total_aflac-all_time_query[0].total_refund, 2) ,
 
         "total_col_3" : round(time_query.tax_pr+time_query.secure_social+time_query.choferil+time_query.inability+time_query.medicare+time_query.social_tips, 2) ,
         "total_col_3_year" : round(all_time_query[0].total_tax_pr+all_time_query[0].total_ss+all_time_query[0].total_choferil+all_time_query[0].total_inability+all_time_query[0].total_medicare+all_time_query[0].total_social_tips, 2) ,
         
 
         "asume" : time_query.asume,
-
+"coda_plans" : time_query.coda_plans,
+            "total_coda_plans" : round(all_time_query.total_coda_plans, 2) ,
         "bonus": time_query.bonus,
         "aflac": time_query.aflac,
         'plan_medico': time_entry.medical_insurance,
@@ -2353,6 +2354,11 @@ Gastos Reembolsados:</td>
                         <td>AFLAC:</td>
                         <td>${{ aflac }}</td>
                         <td>${{ total_aflac }}</td>
+                    </tr>
+                     <tr>
+                        <td>CODA PLANS:</td>
+                        <td>${{ coda_plans }}</td>
+                        <td>${{ total_coda_plans }}</td>
                     </tr>
  <tr>
     <td>Plan Medico:</td>
