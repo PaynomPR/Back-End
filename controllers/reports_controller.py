@@ -331,6 +331,7 @@ def counterfoil_by_range_controller(company_id, employer_id,start,end):
             time_entry.medical_insurance +
             time_entry.choferil +
             time_entry.inability +
+            time_entry.coda_plans +
             time_entry.medicare +
             time_entry.aflac +
             time_entry.secure_social +
@@ -944,7 +945,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
         "total_coda_plans" : all_time_query[0].total_coda_plans,
 
 
-
+        "memo": time_query.memo,
         "bonus": time_query.bonus,
         "aflac": time_query.aflac,
         "medical_insurance" : time_query.medical_insurance,
@@ -1119,7 +1120,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
                             <p>{{ first_name }} {{ last_name }}</p>
                             <p>NUMERO CHEQUE:</p>     
                              <p>{{ company }} {{ actual_date }}</p>
-                            <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
+                            <p>MEMO: {{ memo }}</p>
                         </div>
                     </div>
                 </div>
@@ -1492,6 +1493,7 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
             "company_state": company.state_postal_addess,
             "company_country": COUNTRY[int(company.country_postal_address)-1],
             "company_address_number": company.zipcode_postal_address,
+      
 
         "regular_pay": time_query.regular_pay,
         "detained": time_query.detained,
@@ -1611,7 +1613,7 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
                             <p>{{ first_name }} {{ last_name }}</p>
                             <p>NUMERO CHEQUE: </p>
                              <p>{{ company }} {{ actual_date }}</p>
-                            <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
+                        
                         </div>
                     </div>
                 </div>
@@ -2072,8 +2074,8 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         
 
         "asume" : time_query.asume,
-"coda_plans" : time_query.coda_plans,
-            "total_coda_plans" : round(all_time_query.total_coda_plans, 2) ,
+        "coda_plans" : time_query.coda_plans,
+        "total_coda_plans" : round(all_time_query.total_coda_plans, 2) ,
         "bonus": time_query.bonus,
         "aflac": time_query.aflac,
         'plan_medico': time_entry.medical_insurance,
@@ -2083,7 +2085,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         "last_name": employer.last_name,
         "employer_address": employer.address,
         "employer_state": employer.address_state,
-                "employer_country": COUNTRY[int(employer.address_country)-1],
+        "employer_country": COUNTRY[int(employer.address_country)-1],
 
         "employer_address_number": employer.address_number,
         "employer_phone": employer.phone_number,
@@ -2107,6 +2109,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
         "meal_hours": time_query.meal_time,
         "holiday_hours": time_query.holiday_time,
         "sick_hours": time_query.sick_time,
+        "memo": time_query.memo,
 
 
         "vacation_hours": time_query.vacation_time,
@@ -2248,7 +2251,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
                             <p>{{ first_name }} {{ last_name }}</p>
                             <p>NUMERO CHEQUE: </p>
                              <p>{{ company }} {{ actual_date }}</p>
-                            <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
+                           <p>MEMO: {{ memo }}</p>
                         </div>
                     </div>
                 </div>
@@ -3607,6 +3610,7 @@ def all_counterfoil_controller(company_id, period_id ):
             "total_meal_time" : total_mealt_time ,
             "holiday_time_pay" : time_query.holyday_pay,
             "total_holiday_pay" : all_time_query.total_holyday_pay ,
+        "memo": time_query.memo,
 
             "total_holiday_time" : total_holiday_time ,
             "total_sick_time" : total_sick_time ,
@@ -3830,7 +3834,7 @@ def voucherTemplate():
                             <p>{{ first_name }} {{ last_name }}</p>
                             <p>NUMERO CHEQUE: </p>
                               <p>{{ company }} {{ actual_date }}</p>
-                            <p>MEMO: NÓMINA {{ start_date }} - {{ end_date }}</p>
+                           <p>MEMO: {{ memo }}</p>
                         </div>
                     </div>
                 </div>

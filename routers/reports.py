@@ -117,9 +117,7 @@ async def form_943_pdf(companyBonus: CompanyBonus):
     return get_report_bonus_pdf_controller(companyBonus.company_id, companyBonus.year, companyBonus.bonus)
 
 
-@report_router.post("/vacation")
-async def form_943_pdf(companyBonus: CompanyBonus):
-    return get_report_vacation_pdf_controller(companyBonus.company_id, companyBonus.year, companyBonus.bonus)
+
 
 @report_router.post("/form_943_pdf")
 async def form_943_pdf(companyYear: CompanyYear):

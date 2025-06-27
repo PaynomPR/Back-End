@@ -460,7 +460,7 @@ def update_time_controller(time_id, time):
     time_query.salary = time.salary
     time_query.refund = time.refund
     time_query.pay_date = time.pay_date
-
+    time_query.others= time.others
 
     time_query.regular_pay=time.regular_pay
     time_query.over_pay=time.overtime_pay
@@ -559,8 +559,7 @@ def update_vaction_time(employer_id, times, employer, year, month,time):
                 hours_worked += time.hours_worked_salary
         
         hours_worked = int(hours_worked // 1)
-        print("---------------------"+str(hours_worked))
-        print("---------------------"+str(employer.vacation_hours_monthly))
+        
         
         if not employer.date_admission:
             raise HTTPException(
