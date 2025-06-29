@@ -4,7 +4,7 @@ from models.queries.queryUtils import roundedAmount, getAmountVarios, getEmploye
 from utils.time_func import getAgeEmployer
 from utils.country import COUNTRY
 
-def queryFormW2pr(employer_id, year = None):
+def queryFormW2pr(employer_id, year = None, employee_number=None):
   try:
     if year is None:
       year = datetime.now().year
@@ -56,8 +56,16 @@ def queryFormW2pr(employer_id, year = None):
     countryPhysicalAddressCompany = COUNTRY[int(company.country_physical_address)-1] if company.country_physical_address is not None else ''
     zipcodePhysicalAddressCompany = company.zipcode_physical_address if company.zipcode_physical_address is not None else ''
 
-    
-    n_control = company.w2_first_control
+    # Calculate control number
+    try:
+        # Assume w2_first_control is the starting number for the sequence.
+        # Default to 1 if it's not a valid number, so the sequence starts at 1.
+        base_control_number = int(company.w2_first_control)
+    except (ValueError, TypeError):
+        base_control_number = 1
+
+    # The employee_number is a 1-based index. The first employee should get the base number.
+    n_control = base_control_number + (employee_number - 1) if employee_number is not None else base_control_number
 
     data = {
       'name_first_user': employer.first_name +" "+   employer.middle_name if employer.first_name is not None else '',

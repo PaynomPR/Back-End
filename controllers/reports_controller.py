@@ -879,9 +879,7 @@ def counterfoil_controller(company_id, employer_id, time_id):
         sicks_acum = vacation_time_query[0].sicks_hours        
     
 
-    print("----------------vacation_acum"+ str(vacation_acum))
-    print("----------------sicks_acum"+ str(sicks_acum))
-        
+   
     if (time_query.medical_insurance == None):
         time_query.medical_insurance = 0
     total_medical_insurance = 0
@@ -2575,12 +2573,12 @@ def form_w2pr_pdf_controller(company_id, employer_id, year):
         employers = []
         pdf_files = []
         if employer_id == 0 :
-            employers = session.query(Employers.id).filter(Employers.company_id == company_id).all()
+            employers = session.query(Employers.id).filter(Employers.company_id == company_id).order_by(Employers.id).all()
         else:
-            employers = session.query(Employers.id).filter(Employers.id == employer_id).all()
+            employers = session.query(Employers.id).filter(Employers.id == employer_id).order_by(Employers.id).all()
 
         for (index, employer) in enumerate(employers, start=1):
-            info = queryFormW2pr(employer.id, year)
+            info = queryFormW2pr(employer.id, year,index)
             if info is None:
                 return Response(status_code=status.HTTP_404_NOT_FOUND, content="No data found")
 
