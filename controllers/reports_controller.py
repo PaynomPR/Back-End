@@ -2570,22 +2570,35 @@ Gastos Reembolsados:</td>
 def form_w2pr_pdf_controller(company_id, employer_id, year):
     
     try:
-        employers = []
         pdf_files = []
-        if employer_id == 0 :
-            employers = session.query(Employers.id).filter(Employers.company_id == company_id).order_by(Employers.id).all()
-        else:
-            employers = session.query(Employers.id).filter(Employers.id == employer_id).order_by(Employers.id).all()
 
-        for (index, employer) in enumerate(employers, start=1):
-            info = queryFormW2pr(employer.id, year,index)
+        # 1. Obtener siempre la lista completa y ordenada de IDs de empleados de la compañía.
+        all_company_employers_query = session.query(Employers.id).filter(Employers.company_id == company_id).order_by(Employers.id).all()
+        all_employee_ids = [emp.id for emp in all_company_employers_query]
+
+        employees_to_process = []
+        if employer_id == 0 :
+            # Si se piden todos, la lista a procesar es la lista completa.
+            employees_to_process = all_employee_ids
+        else:
+            # Si se pide uno específico, la lista a procesar solo contiene ese ID.
+            if employer_id in all_employee_ids:
+                employees_to_process = [employer_id]
+            else:
+                return Response(status_code=status.HTTP_404_NOT_FOUND, content="Employee not found in this company")
+
+        for emp_id in employees_to_process:
+            # 2. Encontrar la posición (índice) del empleado actual en la lista completa.
+            employee_order_index = all_employee_ids.index(emp_id) + 1
+
+            info = queryFormW2pr(emp_id, year, employee_order_index)
             if info is None:
                 return Response(status_code=status.HTTP_404_NOT_FOUND, content="No data found")
 
             template = Template(form_w2pr_pdf_generate())
             rendered_html = template.render(info)
 
-            pdf_file = f"./output_files/form_w2pr{index}.pdf"
+            pdf_file = f"./output_files/form_w2pr_{emp_id}.pdf"
             HTML(string=rendered_html).write_pdf(pdf_file)
             pdf_files.append(pdf_file)
 
