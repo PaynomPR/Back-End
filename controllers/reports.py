@@ -6,11 +6,10 @@ from models import employers, periods, time as time_model, vacation_times
 from schemas import reports as report_schemas
 from datetime import date
 from typing import List, Optional
+from database.config import session
 
-router = APIRouter(
-    prefix="/api/reports1",
-    tags=["Reports1"]
-)
+
+report_router = APIRouter()
 
 # --- Helper Functions for Time Calculation ---
 def time_to_minutes(time_str: str) -> int:
@@ -32,7 +31,7 @@ def minutes_to_time(total_minutes: int) -> str:
     minutes = total_minutes % 60
     return f"{sign}{hours:02d}:{minutes:02d}"
 
-@router.get("/vacation-sick-summary", response_model=List[report_schemas.EmployeeReport])
+
 def get_vacation_and_sick_time_report(
     start_date: date,
     end_date: date,
@@ -205,7 +204,7 @@ def get_employee_time_summary(
 
     return response
 
-@router.get("/employee-periodical-summary/{employer_id}", response_model=report_schemas.EmployeePeriodicalReport)
+
 def get_employee_periodical_summary(
     employer_id: int,
     start_date: date,
@@ -313,20 +312,15 @@ def get_employee_periodical_summary(
 
     return final_report
 
-@router.post("/company-periodical-summary", response_model=List[report_schemas.EmployeePeriodicalReport])
-def get_company_periodical_summary(
-    request: report_schemas.CompanyPeriodicalReportRequest,
-    db: Session = Depends(get_db)
-):
+
+def get_company_periodical_summary(company_id, start_date,end_date):
     """
     Generates a detailed, period-by-period report of vacation and sick time for all employees in a company.
     """
-    company_id = request.company_id
-    start_date = request.start_date
-    end_date = request.end_date
+    
 
     # 1. Get all employees for the company
-    all_employees = db.query(employers.Employers).filter(
+    all_employees = session.query(employers.Employers).filter(
         employers.Employers.company_id == company_id,
         employers.Employers.is_deleted == False
     ).all()
@@ -335,7 +329,7 @@ def get_company_periodical_summary(
         raise HTTPException(status_code=404, detail="No active employees found for this company.")
 
     # 2. Get all periods that fall within the requested date range
-    periods_in_range = db.query(periods.Period).filter(
+    periods_in_range = session.query(periods.Period).filter(
         and_(
             periods.Period.period_start >= start_date,
             periods.Period.period_end <= end_date,
@@ -351,7 +345,7 @@ def get_company_periodical_summary(
     # Loop through each employee
     for emp in all_employees:
         # 3. Get Starting Balance for the current employee
-        last_time_record_before = db.query(time_model.Time)\
+        last_time_record_before = session.query(time_model.Time)\
             .join(periods.Period, time_model.Time.period_id == periods.Period.id)\
             .filter(time_model.Time.employer_id == emp.id, periods.Period.period_end < start_date)\
             .order_by(periods.Period.period_end.desc())\
@@ -369,7 +363,7 @@ def get_company_periodical_summary(
         period_details = []
         for p in periods_in_range:
             # a. Get hours USED in this specific period from VacationTimes (transactions)
-            hours_used_result = db.query(
+            hours_used_result = session.query(
                 func.coalesce(func.sum(vacation_times.VacationTimes.vacation_hours), 0).label("total_vacation_used"),
                 func.coalesce(func.sum(vacation_times.VacationTimes.sicks_hours), 0).label("total_sick_used")
             ).filter(
@@ -383,7 +377,7 @@ def get_company_periodical_summary(
             sick_used_minutes = (hours_used_result.total_sick_used or 0) * 60
 
             # b. Get the ENDING balance for this period from the Time model (payroll snapshot)
-            time_record_for_period = db.query(time_model.Time).filter(
+            time_record_for_period = session.query(time_model.Time).filter(
                 and_(
                     time_model.Time.employer_id == emp.id,
                     time_model.Time.period_id == p.id

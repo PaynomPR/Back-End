@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from controllers.reports_controller import outemployer_counterfoil_by_range_controller, out_counterfoil_controller, counterfoil_by_range_controller,all_counterfoil_controller, counterfoil_controller, form_940_pdf_controller, form_choferil_pdf_controller, form_unemployment_pdf_controller, form_withheld_499_pdf_controller, get_report_cfse_pdf_controller, form_w2pr_pdf_controller, form_941_pdf_controller, form_943_pdf_controller ,counterfoil_by_period_controller, form_wages_txt_controller ,get_w2p_txt_controller , form_bonus_pdf_controller ,get_w2psse_txt_controller , get_report_bonus_pdf_controller
+from controllers.reports import get_company_periodical_summary
 from database.config import session
 from models.companies import Companies
 from models.employers import Employers
@@ -65,6 +66,8 @@ class CompanyRange(BaseModel):
     employer_id: int | None
     start: datetime
     end: datetime
+
+
 
 class OutCompanyRange(BaseModel):
     company_id: int | None
@@ -137,7 +140,9 @@ async def form_unemployment_pdf(companyYear: CompanyYear):
 async def form_withheld_499_pdf(companyYear: CompanyYear):
     return form_withheld_499_pdf_controller(companyYear.company_id, companyYear.year, companyYear.period)
 
-
+@report_router.post("/vacation")
+async def form_choferil_pdf(companyRange: OutCompanyRange):
+    return get_company_periodical_summary(companyRange.company_id, companyRange.start,companyRange.end)
 
 @report_router.post("/form_choferil_pdf")
 async def form_choferil_pdf(companyYear: CompanyYear):
