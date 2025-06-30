@@ -8,7 +8,7 @@ from datetime import date
 from typing import List, Optional
 
 router = APIRouter(
-    prefix="/reports1",
+    prefix="api/reports1",
     tags=["Reports1"]
 )
 
