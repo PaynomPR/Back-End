@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
-from database.config import get_db
+
 from models import employers, periods, time as time_model, vacation_times
 from schemas import reports as report_schemas
 from datetime import date
