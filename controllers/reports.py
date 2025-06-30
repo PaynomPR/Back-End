@@ -34,7 +34,7 @@ def minutes_to_time(total_minutes: int) -> str:
 
 
 
-def get_company_periodical_summary(company_id, start_date,end_date):
+def get_company_periodical_summary(company_id, start,end):
     """
     Generates a detailed, period-by-period report of vacation and sick time for all employees in a company.
     """
@@ -52,8 +52,8 @@ def get_company_periodical_summary(company_id, start_date,end_date):
     # 2. Get all periods that fall within the requested date range
     periods_in_range = session.query(periods.Period).filter(
         and_(
-            periods.Period.period_start >= start_date,
-            periods.Period.period_end <= end_date,
+            periods.Period.period_start >= start,
+            periods.Period.period_end <= end,
             periods.Period.is_deleted == False
         )
     ).order_by(periods.Period.period_start).all()
@@ -68,7 +68,7 @@ def get_company_periodical_summary(company_id, start_date,end_date):
         # 3. Get Starting Balance for the current employee
         last_time_record_before = session.query(time_model.Time)\
             .join(periods.Period, time_model.Time.period_id == periods.Period.id)\
-            .filter(time_model.Time.employer_id == emp.id, periods.Period.period_end < start_date)\
+            .filter(time_model.Time.employer_id == emp.id, periods.Period.period_end < start)\
             .order_by(periods.Period.period_end.desc())\
             .first()
 
@@ -142,8 +142,8 @@ def get_company_periodical_summary(company_id, start_date,end_date):
             employer_id=emp.id,
             first_name=emp.first_name,
             last_name=emp.last_name,
-            report_start_date=start_date,
-            report_end_date=end_date,
+            report_start_date=start,
+            report_end_date=end,
             periods=period_details
         )
         company_report.append(employee_report)
