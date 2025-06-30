@@ -80,6 +80,7 @@ app.include_router(
     outemployers_router, tags=["outemployers"], prefix="/api/outemployers"
 )
 app.include_router(outtime_router, tags=["outtime_router"], prefix="/api/outtime")
+
 app.include_router(report_router, tags=["report_router"], prefix="/api/reports")
 app.include_router(period_routes, tags=["period_router"], prefix="/api/period")
 
