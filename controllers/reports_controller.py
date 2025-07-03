@@ -1,17 +1,18 @@
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 import fitz  # PyMuPDF
-
 import calendar
 import datetime as date_time
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import FileResponse, Response
 from jinja2 import Template
 from sqlalchemy.sql import func
-from models.vacation_times import VacationTimes
-
 from sqlalchemy import cast, Integer
 from datetime import date
+from weasyprint import HTML
+from collections import defaultdict, OrderedDict
+
+from models.vacation_times import VacationTimes
 
 from database.config import session
 from models.companies import Companies
@@ -21,16 +22,12 @@ from models.periods import Period
 from models.time import Time
 from models.time_outemployer import TimeOutEmployer
 
-from models.payments import Payments
 from models.queries.queryFormW2pr import queryFormW2pr
 from utils.time_func import minutes_to_time, time_to_minutes
 from utils.country import COUNTRY
 from utils.form_499 import form_withheld_499_pdf_generator
 from utils.from_choferil import form_choferil_pdf_generator
-from utils.pdfkit.pdfhandled import create_pdf
-from weasyprint import HTML
 from utils.form_940 import form_940_pdf_generator
-from utils.form_491 import form_941_pdf_generator
 from utils.form_wages import form_wages_txt_generator
 from utils.form_493 import form_943_pdf_generator
 from utils.unemployment import form_unemployment_pdf_generator
@@ -38,10 +35,12 @@ from utils.form_w2p_txt import form_w2p_txt_generator
 from utils.form_w2psse_txt import form_w2psse_txt_generator
 from collections import defaultdict, OrderedDict
 
+from models.payments import Payments
+from schemas import reports as report_schemas
 from utils.form_w2pr import form_w2pr_pdf_generate
 
 from models.queries.queryUtils import   getAmountCSFECompany , getBonusCompany
-
+from utils.form_491 import form_941_pdf_generator
 report_router = APIRouter()
 
 def outemployer_counterfoil_by_range_controller(company_id, start,end):
@@ -273,6 +272,209 @@ def outemployer_counterfoil_by_range_controller(company_id, start,end):
         pdf_file,
         media_type="application/pdf",
         filename="pdf_cfse.pdf"
+    )
+
+def get_company_periodical_summary(company_id, start, end):
+    """
+    Generates a detailed, period-by-period PDF report of vacation and sick time 
+    for all employees in a company.
+    """
+    # 1. Get company info for the header
+    company = session.query(Companies).filter(Companies.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found.")
+
+    # 2. Get all employees for the company
+    all_employees = session.query(Employers).filter(
+        Employers.company_id == company_id,
+        Employers.is_deleted == False
+    ).all()
+
+    if not all_employees:
+        raise HTTPException(status_code=404, detail="No active employees found for this company.")
+
+    # 3. Get all periods that fall within the requested date range
+    start_date = datetime.fromisoformat(str(start)).date()
+    end_date = datetime.fromisoformat(str(end)).date()
+
+    periods_in_range = session.query(Period).filter(
+        Period.period_start >= start_date,
+        Period.period_end <= end_date,
+        Period.is_deleted == False
+    ).order_by(Period.period_start).all()
+
+    if not periods_in_range:
+        # Return an empty PDF if no periods are found
+        return Response(content="No data for this period range.", media_type="text/plain")
+
+    company_report = []
+
+    # Loop through each employee
+    for emp in all_employees:
+        # 4. Get Starting Balance for the current employee
+        last_time_record_before = session.query(Time)\
+            .join(Period, Time.period_id == Period.id)\
+            .filter(Time.employer_id == emp.id, Period.period_end < start_date)\
+            .order_by(Period.period_end.desc())\
+            .first()
+
+        if last_time_record_before:
+            current_vacation_balance_minutes = time_to_minutes(last_time_record_before.vacation_acum_hours)
+            current_sick_balance_minutes = time_to_minutes(last_time_record_before.sicks_acum_hours)
+        else:
+            # If no record before, use the initial values from the employer model
+            current_vacation_balance_minutes = time_to_minutes(emp.vacation_time)
+            current_sick_balance_minutes = time_to_minutes(emp.sick_time)
+
+        # 5. Iterate through each period for the current employee
+        period_details = []
+        for p in periods_in_range:
+            # a. Get hours USED in this specific period from VacationTimes (transactions)
+            hours_used_result = session.query(
+                func.coalesce(func.sum(VacationTimes.vacation_hours), 0).label("total_vacation_used"),
+                func.coalesce(func.sum(VacationTimes.sicks_hours), 0).label("total_sick_used")
+            ).filter(
+                VacationTimes.employer_id == emp.id,
+                VacationTimes.period_id == p.id
+            ).one()
+            
+            vacation_used_minutes = (hours_used_result.total_vacation_used or 0) * 60
+            sick_used_minutes = (hours_used_result.total_sick_used or 0) * 60
+
+            # b. Get the ENDING balance for this period from the Time model (payroll snapshot)
+            time_record_for_period = session.query(Time).filter(
+                Time.employer_id == emp.id,
+                Time.period_id == p.id
+            ).first()
+
+            if time_record_for_period:
+                vacation_end_balance_minutes = time_to_minutes(time_record_for_period.vacation_acum_hours)
+                sick_end_balance_minutes = time_to_minutes(time_record_for_period.sicks_acum_hours)
+            else:
+                vacation_end_balance_minutes = current_vacation_balance_minutes - vacation_used_minutes
+                sick_end_balance_minutes = current_sick_balance_minutes - sick_used_minutes
+
+            # c. Calculate ADDED hours: Added = (End - Start) + Used
+            vacation_added_minutes = (vacation_end_balance_minutes - current_vacation_balance_minutes) + vacation_used_minutes
+            sick_added_minutes = (sick_end_balance_minutes - current_sick_balance_minutes) + sick_used_minutes
+
+            # d. Create the report entry for this period
+            period_entry = {
+                "period_number": p.period_number,
+                "period_start": p.period_start.strftime('%Y-%m-%d'),
+                "period_end": p.period_end.strftime('%Y-%m-%d'),
+                "vacation_start_balance": minutes_to_time(current_vacation_balance_minutes),
+                "vacation_hours_added": minutes_to_time(vacation_added_minutes),
+                "vacation_hours_used": minutes_to_time(vacation_used_minutes),
+                "vacation_end_balance": minutes_to_time(vacation_end_balance_minutes),
+                "sick_start_balance": minutes_to_time(current_sick_balance_minutes),
+                "sick_hours_added": minutes_to_time(sick_added_minutes),
+                "sick_hours_used": minutes_to_time(sick_used_minutes),
+                "sick_end_balance": minutes_to_time(sick_end_balance_minutes)
+            }
+            period_details.append(period_entry)
+
+            # e. Update the current balance for the next iteration
+            current_vacation_balance_minutes = vacation_end_balance_minutes
+            current_sick_balance_minutes = sick_end_balance_minutes
+
+        # 6. Construct the final response object for the employee
+        employee_report = {
+            "employer_id": emp.id,
+            "first_name": emp.first_name,
+            "last_name": emp.last_name,
+            "periods": period_details
+        }
+        company_report.append(employee_report)
+
+    # 7. Prepare data and render the PDF
+    template_data = {
+        "company_name": company.name,
+        "report_start_date": start_date.strftime('%Y-%m-%d'),
+        "report_end_date": end_date.strftime('%Y-%m-%d'),
+        "employee_reports": company_report
+    }
+
+    template_html = """
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Resumen Periódico de Vacaciones y Enfermedad</title>
+        <style>
+            @page { size: landscape; margin: 1cm; }
+            body { font-family: sans-serif; font-size: 9px; }
+            h1, h2 { text-align: center; margin-bottom: 5px; }
+            h3 { margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #999; padding: 3px; text-align: center; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            .employee-section { page-break-inside: avoid; }
+            .header-main { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px;}
+            .header-main h1 { margin: 0; font-size: 18px; }
+            .header-main p { margin: 0; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="header-main">
+            <h1>{{ company_name }}</h1>
+            <p>Reporte del {{ report_start_date }} al {{ report_end_date }}</p>
+        </div>
+        {% for employee in employee_reports %}
+            <div class="employee-section">
+                <h3>{{ employee.first_name }} {{ employee.last_name }}</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Periodo</th>
+                            <th rowspan="2">Fecha Inicio</th>
+                            <th rowspan="2">Fecha Fin</th>
+                            <th colspan="4">Vacaciones (HH:MM)</th>
+                            <th colspan="4">Enfermedad (HH:MM)</th>
+                        </tr>
+                        <tr>
+                            <th>Balance Inicial</th><th>Acumuladas</th><th>Usadas</th><th>Balance Final</th>
+                            <th>Balance Inicial</th><th>Acumuladas</th><th>Usadas</th><th>Balance Final</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for period in employee.periods %}
+                        <tr>
+                            <td>{{ period.period_number }}</td>
+                            <td>{{ period.period_start }}</td>
+                            <td>{{ period.period_end }}</td>
+                            <td>{{ period.vacation_start_balance }}</td>
+                            <td>{{ period.vacation_hours_added }}</td>
+                            <td>{{ period.vacation_hours_used }}</td>
+                            <td>{{ period.vacation_end_balance }}</td>
+                            <td>{{ period.sick_start_balance }}</td>
+                            <td>{{ period.sick_hours_added }}</td>
+                            <td>{{ period.sick_hours_used }}</td>
+                            <td>{{ period.sick_end_balance }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="11">No hay datos para este empleado en el rango de fechas.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endfor %}
+    </body>
+    </html>
+    """
+
+    template = Template(template_html)
+    rendered_html = template.render(template_data)
+
+    pdf_file = "periodical_summary.pdf"
+    HTML(string=rendered_html).write_pdf(pdf_file)
+
+    return FileResponse(
+        pdf_file,
+        media_type="application/pdf",
+        filename="Resumen_Periodico_Vacaciones.pdf"
     )
 
 def counterfoil_by_range_controller(company_id, employer_id,start,end):
