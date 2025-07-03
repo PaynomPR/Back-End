@@ -299,8 +299,8 @@ def get_company_periodical_summary(company_id, start, end):
     employee_initial_report_balances = {}
     for emp in all_employees:
         # Start with the employee's absolute initial balance
-        current_vacation_balance = time_to_minutes(emp.vacation_hours)
-        current_sick_balance = time_to_minutes(emp.sicks_hours)
+        current_vacation_balance = time_to_minutes(emp.vacation_time)
+        current_sick_balance = time_to_minutes(emp.sick_time)
 
         # Get all periods *before* the report start date for this employee
         periods_before_report = session.query(Period).filter(
