@@ -355,6 +355,17 @@ def get_company_periodical_summary(company_id, start, end):
             used_data = time_used_map[(emp.id, p.id)]
             added_data = hours_added_map[(emp.id, p.id)]
 
+            # Check if there is any activity in this period
+            total_minutes_changed = (
+                added_data['vacation_added'] +
+                used_data['vacation_used'] +
+                added_data['sick_added'] +
+                used_data['sick_used']
+            )
+
+            if total_minutes_changed == 0:
+                continue  # Skip this period if no hours were added or used
+
             period_entry = {
                 "period_number": p.period_number,
                 "period_start": p.period_start.strftime('%Y-%m-%d'),
