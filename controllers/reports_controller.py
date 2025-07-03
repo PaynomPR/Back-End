@@ -283,7 +283,6 @@ def get_company_periodical_summary(company_id, start, end):
     company = session.query(Companies).filter(Companies.id == company_id).first()    
     if not company:
         raise HTTPException(status_code=404, detail="Company not found.")
-
     # 2. Get all employees for the company
     all_employees = session.query(Employers).filter(
         Employers.company_id == company_id,
@@ -292,11 +291,70 @@ def get_company_periodical_summary(company_id, start, end):
 
     if not all_employees:
         raise HTTPException(status_code=404, detail="No active employees found for this company.")
-
-    # 3. Get all periods that fall within the requested date range
+    
     start_date = datetime.fromisoformat(str(start)).date()
     end_date = datetime.fromisoformat(str(end)).date()
 
+    # --- REVISED STEP: Calculate employee balances at the start_date of the report ---
+    employee_initial_report_balances = {}
+    for emp in all_employees:
+        # Start with the employee's absolute initial balance
+        current_vacation_balance = time_to_minutes(emp.vacation_hours)
+        current_sick_balance = time_to_minutes(emp.sicks_hours)
+
+        # Get all periods *before* the report start date for this employee
+        periods_before_report = session.query(Period).filter(
+             Period.period_end < start_date, # Periods that end before the report starts
+            Period.is_deleted == False
+        ).order_by(Period.period_start).all()
+
+        # Get all vacation/sick time data for these preceding periods for the current employee
+        # Get hours USED (Resta) from Time table for periods before report
+        time_used_before_report = session.query(
+            Time.period_id,
+            Time.vacation_time,
+            Time.sick_time
+        ).filter(
+             Time.employer_id == emp.id,
+            Time.period_id.in_([p.id for p in periods_before_report])
+        ).all()
+        
+        # Get hours ADDED (Suma) from VacationTimes table for periods before report
+        hours_added_before_report = session.query(
+             VacationTimes.period_id,
+            func.coalesce(func.sum(VacationTimes.vacation_hours), 0).label("total_vacation_added"),
+            func.coalesce(func.sum(VacationTimes.sicks_hours), 0).label("total_sick_added")
+        ).filter(
+            VacationTimes.employer_id == emp.id,
+            VacationTimes.period_id.in_([p.id for p in periods_before_report])
+        ).group_by(VacationTimes.period_id).all()
+
+        # Create maps for quick lookup
+        used_before_map = {rec.period_id: {'vacation_used': time_to_minutes(rec.vacation_time),
+                                           'sick_used': time_to_minutes(rec.sick_time)}
+                           for rec in time_used_before_report}
+
+        added_before_map = {rec.period_id: {'vacation_added': (rec.total_vacation_added or 0) * 60,
+                                            'sick_added': (rec.total_sick_added or 0) * 60}
+                            for rec in hours_added_before_report}
+        
+        # Apply changes from periods *before* the report start date
+        for p_before in periods_before_report:
+            # Get added and used hours for this specific period before the report
+            added = added_before_map.get(p_before.id, {'vacation_added': 0, 'sick_added': 0})
+            used = used_before_map.get(p_before.id, {'vacation_used': 0, 'sick_used': 0})
+
+            current_vacation_balance += added['vacation_added'] - used['vacation_used']
+            current_sick_balance += added['sick_added'] - used['sick_used']
+        
+        employee_initial_report_balances[emp.id] = {
+            'vacation': current_vacation_balance,
+            'sick': current_sick_balance
+        }
+
+    # --- END REVISED STEP ---
+
+    # 3. Get all periods that fall within the requested date range
     periods_in_range = session.query(Period).filter(
         Period.period_start >= start_date,
         Period.period_end <= end_date,
@@ -310,8 +368,8 @@ def get_company_periodical_summary(company_id, start, end):
     employee_ids = [emp.id for emp in all_employees]
     period_ids = [p.id for p in periods_in_range]
 
-    # 4. Pre-fetch all data to avoid queries inside loops
-    # a. Get hours USED (Resta) from Time table
+    # 4. Pre-fetch all data for the REPORT PERIOD to avoid queries inside loops
+    # a. Get hours USED (Resta) from Time table for the report period
     time_used_records = session.query(
         Time.employer_id,
         Time.period_id,
@@ -329,7 +387,7 @@ def get_company_periodical_summary(company_id, start, end):
             'sick_used': time_to_minutes(rec.sick_time)
         }
 
-    # b. Get hours ADDED (Suma) from VacationTimes table
+    # b. Get hours ADDED (Suma) from VacationTimes table for the report period
     hours_added_records = session.query(
         VacationTimes.employer_id,
         VacationTimes.period_id,
@@ -350,12 +408,16 @@ def get_company_periodical_summary(company_id, start, end):
     # 5. Build the report structure by looping through employees and periods
     company_report = []
     for emp in all_employees:
+        # Initialize balances for the current employee at the report's start date
+        current_vacation_balance = employee_initial_report_balances[emp.id]['vacation']
+        current_sick_balance = employee_initial_report_balances[emp.id]['sick']
+
         period_details = []
         for p in periods_in_range:
             used_data = time_used_map[(emp.id, p.id)]
             added_data = hours_added_map[(emp.id, p.id)]
 
-            # Check if there is any activity in this period
+            # Check if there is any activity in this period or if there's a starting balance
             total_minutes_changed = (
                 added_data['vacation_added'] +
                 used_data['vacation_used'] +
@@ -363,8 +425,15 @@ def get_company_periodical_summary(company_id, start, end):
                 used_data['sick_used']
             )
 
-            if total_minutes_changed == 0:
-                continue  # Skip this period if no hours were added or used
+            # Update running balances before adding to the period_entry
+            # This is the balance *at the end of this current period*
+            current_vacation_balance += added_data['vacation_added'] - used_data['vacation_used']
+            current_sick_balance += added_data['sick_added'] - used_data['sick_used']
+
+            # We only add a period entry if there was activity within the period itself
+            # or if it's the very first period and there's a starting balance to show.
+            if total_minutes_changed == 0 and p != periods_in_range[0] and current_vacation_balance == 0 and current_sick_balance == 0:
+                continue
 
             period_entry = {
                 "period_number": p.period_number,
@@ -373,19 +442,26 @@ def get_company_periodical_summary(company_id, start, end):
                 "vacation_hours_added": minutes_to_time(added_data['vacation_added']),
                 "vacation_hours_used": minutes_to_time(used_data['vacation_used']),
                 "sick_hours_added": minutes_to_time(added_data['sick_added']),
-                "sick_hours_used": minutes_to_time(used_data['sick_used'])
+                "sick_hours_used": minutes_to_time(used_data['sick_used']),
+                "vacation_balance_eop": minutes_to_time(current_vacation_balance), # Balance at the end of this period
+                "sick_balance_eop": minutes_to_time(current_sick_balance) # Balance at the end of this period
             }
             period_details.append(period_entry)
+        # Only add employee to report if they have an initial balance or period activity
+        if employee_initial_report_balances[emp.id]['vacation'] > 0 or \
+           employee_initial_report_balances[emp.id]['sick'] > 0 or \
+           len(period_details) > 0:
+            employee_report = {
+                "employer_id": emp.id,
+                "first_name": emp.first_name,
+                "last_name": emp.last_name,
+                "initial_vacation_balance": minutes_to_time(employee_initial_report_balances[emp.id]['vacation']),
+                "initial_sick_balance": minutes_to_time(employee_initial_report_balances[emp.id]['sick']),
+                "periods": period_details
+            }
+            company_report.append(employee_report)
 
-        employee_report = {
-            "employer_id": emp.id,
-            "first_name": emp.first_name,
-            "last_name": emp.last_name,
-            "periods": period_details
-        }
-        company_report.append(employee_report)
-
-    # 6. Prepare data and render the PDF
+    # 6. Prepare data and render the PDF (This is the requested part)
     template_data = {
         "company_name": company.name,
         "report_start_date": start_date.strftime('%Y-%m-%d'),
@@ -424,27 +500,32 @@ def get_company_periodical_summary(company_id, start, end):
                 <table>
                     <thead>
                         <tr>
-                            <th rowspan="2">Periodo</th>
                             <th rowspan="2">Fecha Inicio</th>
                             <th rowspan="2">Fecha Fin</th>
-                            <th colspan="2">Vacaciones (HH:MM)</th>
-                            <th colspan="2">Enfermedad (HH:MM)</th>
+                            <th colspan="3">Vacaciones (HH:MM)</th>
+                            <th colspan="3">Enfermedad (HH:MM)</th>
                         </tr>
                         <tr>
-                            <th>Acumuladas</th><th>Usadas</th>
-                            <th>Acumuladas</th><th>Usadas</th>
+                        
+                            <th>Acumuladas</th>
+                            <th>Usadas</th>
+                            <th>Balance Fin Periodo</th>
+                            <th>Acumuladas</th>
+                            <th>Usadas</th>
+                            <th>Balance Fin Periodo</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for period in employee.periods %}
+                         {% for period in employee.periods %}
                         <tr>
-                            <td>{{ period.period_number }}</td>
                             <td>{{ period.period_start }}</td>
                             <td>{{ period.period_end }}</td>
                             <td>{{ period.vacation_hours_added }}</td>
                             <td>{{ period.vacation_hours_used }}</td>
+                              <td>{{ period.vacation_balance_eop }}</td>
                             <td>{{ period.sick_hours_added }}</td>
                             <td>{{ period.sick_hours_used }}</td>
+                            <td>{{ period.sick_balance_eop }}</td>
                         </tr>
                         {% else %}
                         <tr>
