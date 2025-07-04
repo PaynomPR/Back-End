@@ -2518,6 +2518,7 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
 
                     <div class="flex-container">
                         <div class="column">
+                         <p>{{ start_date }} - {{ end_date }}</p>
                         <p>{{ company }}</p>
                     <p>Fecha: {{ actual_date }}</p>
                             <p>{{ first_name }} {{ last_name }}</p>
@@ -4114,6 +4115,7 @@ def voucherTemplate():
 
                     <div class="flex-container">
                         <div class="column">
+                         <p>{{ start_date }} - {{ end_date }}</p>
                         <p>{{ company }}</p>
                     <p>Fecha: {{ actual_date }}</p>
                             <p>{{ first_name }} {{ last_name }}</p>
