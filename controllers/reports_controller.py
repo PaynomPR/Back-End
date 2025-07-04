@@ -1385,6 +1385,8 @@ def counterfoil_controller(company_id, employer_id, time_id):
 
                     <div class="flex-container">
                         <div class="column">
+                      
+         <p>{{ start_date }} - {{ end_date }}</p>
                         <p>{{ company }}</p>
                     <p>Fecha: {{ actual_date }}</p>
                             <p>{{ first_name }} {{ last_name }}</p>
