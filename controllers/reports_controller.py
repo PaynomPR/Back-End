@@ -1506,13 +1506,13 @@ Gastos Reembolsados:</td>
                     </tr>
                      <tr>
                         <td>CODA PLANS:</td>
-                        <td>${{ coda_plans }}</td>
-                        <td>${{ total_coda_plans }}</td>
+                        <td>${{ "{:.2f}".format(coda_plans) }}</td>
+                        <td>${{ "{:.2f}".format(total_coda_plans) }}</td>
                     </tr>
    <tr>
                         <td>Plan Medico:</td>
-                        <td>${{ "{:.2f}".format(plan_medico) }}</td>
-                        <td>${{ "{:.2f}".format(total_medical_insurance) }}</td>
+                        <td>${{ plan_medico }}</td>
+                        <td>${{ total_medical_insurance }}</td>
                     </tr>
 
                     
