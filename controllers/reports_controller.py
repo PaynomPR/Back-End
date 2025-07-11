@@ -3403,9 +3403,12 @@ def get_report_bonus_pdf_controller(company_id, year, bonus):
 def get_report_cfse_pdf_controller(company_id, year, period):
 
     company = session.query(Companies).filter(Companies.id == company_id).first()
-    employees = session.query(Employers).filter(Employers.company_id == company_id).all()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found.")
 
-    # Calculate quarterly amounts
+    employees = session.query(Employers).filter(Employers.company_id == company_id, Employers.is_deleted == False).all()
+
+    # Calculate quarterly amounts based on fiscal year
     quarter_amounts = []
     quarter_starts = [7, 10, 1,4]
     
@@ -3430,13 +3433,17 @@ def get_report_cfse_pdf_controller(company_id, year, period):
             
     
     employee_data = []
-    
+    total_trimestre_1 = 0.0
+    total_trimestre_2 = 0.0
+    total_trimestre_3 = 0.0
+    total_trimestre_4 = 0.0
+    grand_total = 0.0
 
     for employee in employees:
         employee_dict = {
             "nombre": employee.first_name,
             "apellido": employee.last_name,
-            "categoria": "",  # Assuming these fields exist
+            "categoria": employee.category_cfse or "",
             "trimestre_1": 0,
             "trimestre_2": 0,
             "trimestre_3": 0,
@@ -3448,19 +3455,31 @@ def get_report_cfse_pdf_controller(company_id, year, period):
         for quarter_amount in quarter_amounts:
             
             if quarter_amount['employer_id'] == employee.id:
-                employee_dict[f"trimestre_{quarter_amount['period']}"] += round(quarter_amount['wages'],2)
-                employee_dict["Total"] += round(quarter_amount['wages'],2)
+                wages = round(quarter_amount.get('wages', 0.0) or 0.0, 2)
+                employee_dict[f"trimestre_{quarter_amount['period']}"] += wages
+                employee_dict["Total"] += wages
                 
 
-        employee_data.append(employee_dict)
-
-        
+        # Only add employee if they have wages
+        if employee_dict["Total"] > 0:
+            total_trimestre_1 += employee_dict["trimestre_1"]
+            total_trimestre_2 += employee_dict["trimestre_2"]
+            total_trimestre_3 += employee_dict["trimestre_3"]
+            total_trimestre_4 += employee_dict["trimestre_4"]
+            grand_total += employee_dict["Total"]
+            employee_data.append(employee_dict)
 
     info = {
         "employer_name": company.name,
-        "commercial_register": company.commercial_register,
+        "commercial_register": company.number_patronal,
         "data": employee_data,
         "telefono": company.contact_number,
+        "total_trimestre_1": total_trimestre_1,
+        "total_trimestre_2": total_trimestre_2,
+        "total_trimestre_3": total_trimestre_3,
+        "total_trimestre_4": total_trimestre_4,
+        "grand_total": grand_total,
+        "report_date": date_time.datetime.now().strftime("%Y-%m-%d")
     }
     #plantilla html
     template_html = """
@@ -3469,26 +3488,38 @@ def get_report_cfse_pdf_controller(company_id, year, period):
         <html lang="es">
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Reporte Planilla CFSE</title>
             <style>
                 @page {
-                    size: A4 landscape; /* Configura la página en orientación horizontal */
-                    margin: 20mm;
+                    size: landscape;
+                    margin: 1cm;
                 }
 
                 body {
-                    font-family: Arial, sans-serif;
-                    margin: 20px;
+                    font-family: 'Helvetica', 'Arial', sans-serif;
+                    font-size: 9pt;
+                    color: #333;
                 }
 
                 .header {
                     text-align: center;
-                    margin-bottom: 40px;
+                    margin-bottom: 20px;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 10px;
                 }
 
-                .header h1, .header h2 {
+                .header h1, .header h2, .header p {
                     margin: 0;
+                }
+                .header h1 {
+                    font-size: 16pt;
+                }
+                .header h2 {
+                    font-size: 12pt;
+                    font-weight: normal;
+                }
+                .header p {
+                    font-size: 10pt;
                 }
 
                 table {
@@ -3498,29 +3529,36 @@ def get_report_cfse_pdf_controller(company_id, year, period):
                 }
 
                 table, th, td {
-                    border: 1px solid black;
+                    border: 1px solid #ccc;
                 }
 
                 th, td {
-                    padding: 8px;
+                    padding: 6px;
                     text-align: left;
                 }
 
                 th {
-                    background-color: #f2f2f2;
-                    font-size: 10px;
+                    background-color: #e9ecef;
+                    font-weight: bold;
+                    text-align: center;
                 }
-
-                .total-row {
+                td.numeric, th.numeric {
+                    text-align: right;
+                }
+                tbody tr:nth-child(odd) {
+                    background-color: #f8f9fa;
+                }
+                tfoot tr {
+                    background-color: #e9ecef;
                     font-weight: bold;
                 }
             </style>
         </head>
         <body>
             <div class="header">
-                <h4>{{ employer_name }}</h4>
-                <h4>Número de Registro: {{ commercial_register }}</h4>
-                <h4>Teléfono: {{ telefono }}</h4>
+                <h1>{{ employer_name }}</h1>
+                <h2>Reporte Planilla CFSE</h2>
+                <p>Número de Registro Patronal: {{ commercial_register }} | Teléfono: {{ telefono }} | Fecha: {{ report_date }}</p>
             </div>
 
             <table>
@@ -3529,28 +3567,41 @@ def get_report_cfse_pdf_controller(company_id, year, period):
                         <th>Nombre</th>
                         <th>Apellido</th>
                         <th>Categoría</th>
-                        <th>Tercer Trimestre</th>
-                        <th>Cuarto Trimestre</th>
-                        <th>Primer Trimestre</th>
-                        <th>Segundo Trimestre</th>
-                        <th>Total</th>
+                        <th class="numeric">Tercer Trimestre</th>
+                        <th class="numeric">Cuarto Trimestre</th>
+                        <th class="numeric">Primer Trimestre</th>
+                        <th class="numeric">Segundo Trimestre</th>
+                        <th class="numeric">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for employee in data %}
-<tr>
-    <td>{{ employee.nombre }}</td>
-    <td>{{ employee.apellido }}</td>
-    <td>{{ employee.categoria }}</td>
-    <td>{{ "{:.2f}".format(employee.trimestre_1)  }}</td>
-    <td>{{ "{:.2f}".format(employee.trimestre_2)  }}</td>
-    <td>{{ "{:.2f}".format(employee.trimestre_3)  }}</td>
-    <td>{{ "{:.2f}".format(employee.trimestre_4)  }}</td>
-    <td>{{ "{:.2f}".format(employee.Total) }}</td>
-</tr>
-{% endfor %}
-                    
+                    <tr>
+                        <td>{{ employee.nombre }}</td>
+                        <td>{{ employee.apellido }}</td>
+                        <td style="text-align: center;">{{ employee.categoria }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(employee.trimestre_1) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(employee.trimestre_2) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(employee.trimestre_3) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(employee.trimestre_4) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(employee.Total) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center;">No hay datos de empleados para este período.</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="text-align: right; font-weight: bold;">TOTALES</td>
+                        <td class="numeric">{{ "{:.2f}".format(total_trimestre_1) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(total_trimestre_2) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(total_trimestre_3) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(total_trimestre_4) }}</td>
+                        <td class="numeric">{{ "{:.2f}".format(grand_total) }}</td>
+                    </tr>
+                </tfoot>
             </table>
         </body>
         </html>
