@@ -28,14 +28,13 @@ def form_withheld_499_pdf_generator(company_id, year, period):
             for field in page.widgets():
                 if field.field_type == fitz.PDF_WIDGET_TYPE_TEXT:
                     if field.field_name in data_entry:
-                        field.field_value = data_entry[field.field_name]
+                        value = data_entry[field.field_name]
+                        # Check if the value is a float (decimal) and format it
+                        if isinstance(value, float):
+                            field.field_value = f"{value:.2f}"
+                        else:
+                            field.field_value = str(value) # Ensure non-float values are strings
                         field.update()
-                    # field.field_value = field.field_name
-                    # field.update()
-                    # if field.field_name == 'txtNombrePatrono':
-                    #     field.field_value = data_entry['company_name']
-                    #     field.update()
-        # Save the updated PDF
         doc.save(document_dir / output_file_name, incremental=False, encryption=fitz.PDF_ENCRYPT_KEEP)
     except Exception as e:
         print(f"An error occurred: {e}")

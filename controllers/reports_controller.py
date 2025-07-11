@@ -1411,68 +1411,68 @@ def counterfoil_controller(company_id, employer_id, time_id):
                     </tr>
                     <tr>
                         <td>REG. PAY:</td>
-                        <td>${{ regular_pay }}</td>
+                        <td>${{ "{:.2f}".format(regular_pay) }}</td>
                         <td>${{ "{:.2f}".format(total_regular_pay)}}</td>
                     </tr>
                     <tr>
                         <td>VACATIONS:</td>
-                        <td>${{ vacation_pay }}</td>
-                        <td>${{ total_vacation_pay }}</td>
+                        <td>${{ "{:.2f}".format(vacation_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_vacation_pay) }}</td>
                     </tr>
                         <tr>
                         <td>SICK PAY:</td>
-                        <td>${{ sick_pay }}</td>
-                        <td>${{ total_sick_pay }}</td>
+                        <td>${{ "{:.2f}".format(sick_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_sick_pay) }}</td>
                     </tr>
                         <tr>
                         <td>OVER TIME:</td>
-                        <td>${{ overtime_pay }}</td>
-                        <td>${{ total_over_pay }}</td>
+                        <td>${{ "{:.2f}".format(overtime_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_over_pay) }}</td>
                     </tr>
                         <tr>
                         <td>MEAL TIME:</td>
-                        <td>${{ meal_time_pay }}</td>
-                        <td>${{ total_meal_pay }}</td>
+                        <td>${{ "{:.2f}".format(meal_time_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_meal_pay) }}</td>
                     </tr>
                     <tr>
                         <td>HOLIDAY TIME:</td>
-                        <td>${{ holiday_time_pay }}</td>
-                        <td>${{ total_holiday_pay }}</td>
+                        <td>${{ "{:.2f}".format(holiday_time_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_holiday_pay) }}</td>
                     </tr>
                         <tr>
                         <td>COMMI:</td>
-                        <td>${{ comissions }}</td>
-                        <td>${{ total_commissions }}</td>
+                        <td>${{ "{:.2f}".format(comissions) }}</td>
+                        <td>${{ "{:.2f}".format(total_commissions) }}</td>
                     </tr>
                         <tr>
                         <td>TIPS:</td>
-                        <td>${{ tips_pay }}</td>
-                        <td>${{ total_tips }}</td>
+                        <td>${{ "{:.2f}".format(tips_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_tips) }}</td>
                     </tr>
                     <tr>
                         <td>CONCESSIONS:</td>
-                        <td>${{ concessions }}</td>
-                        <td>${{ total_concessions }}</td>
+                        <td>${{ "{:.2f}".format(concessions) }}</td>
+                        <td>${{ "{:.2f}".format(total_concessions) }}</td>
                     </tr>
                         <tr>
                         <td>SALARY:</td>
-                        <td>${{ salary }}</td>
-                        <td>${{ total_salary }}</td>
+                        <td>${{ "{:.2f}".format(salary) }}</td>
+                        <td>${{ "{:.2f}".format(total_salary) }}</td>
                     </tr>
                         <tr>
                         <td>BONUS:</td>
-                        <td>${{ bonus }}</td>
-                        <td>${{ total_bonus }}</td>
+                        <td>${{ "{:.2f}".format(bonus) }}</td>
+                        <td>${{ "{:.2f}".format(total_bonus) }}</td>
                     </tr>
                         <tr>
                         <td>OTHER 1:</td>
-                        <td>${{ others }}</td>
-                        <td>${{ total_others }}</td>
+                        <td>${{ "{:.2f}".format(others) }}</td>
+                        <td>${{ "{:.2f}".format(total_others) }}</td>
                     </tr>
                     <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_1 }}</td>
-                        <td>${{total_col_1_year}}</td>
+                        <td>${{ "{:.2f}".format(total_col_1) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_1_year)}}</td>
                     </tr>
                 </table>
                 </div>
@@ -1486,33 +1486,33 @@ def counterfoil_controller(company_id, employer_id, time_id):
                     <tr>
                         <td>
 Gastos Reembolsados:</td>
-                        <td>${{ refund }}</td>
-                        <td>${{ total_refund }}</td>
+                        <td>${{ "{:.2f}".format(refund) }}</td>
+                        <td>${{ "{:.2f}".format(total_refund) }}</td>
                     </tr>
                     <tr>
                         <td>ASUME:</td>
-                        <td>${{ asume }}</td>
-                        <td>${{total_asume}}</td>
+                        <td>${{ "{:.2f}".format(asume) }}</td>
+                        <td>${{ "{:.2f}".format(total_asume)}}</td>
                     </tr>
                         <tr>
                         <td>DONATIVOS:</td>
-                        <td>${{ donation }}</td>
-                        <td>${{ total_donation }}</td>
+                        <td>${{ "{:.2f}".format(donation) }}</td>
+                        <td>${{ "{:.2f}".format(total_donation) }}</td>
                     </tr>
                         <tr>
                         <td>AFLAC:</td>
-                        <td>${{ aflac }}</td>
-                        <td>${{ total_aflac }}</td>
+                        <td>${{ "{:.2f}".format(aflac) }}</td>
+                        <td>${{ "{:.2f}".format(total_aflac) }}</td>
                     </tr>
                      <tr>
                         <td>CODA PLANS:</td>
-                        <td>${{ coda_plans }}</td>
-                        <td>${{ total_coda_plans }}</td>
+                        <td>${{ "{:.2f}".format(coda_plans) }}</td>
+                        <td>${{ "{:.2f}".format(total_coda_plans) }}</td>
                     </tr>
    <tr>
                         <td>Plan Medico:</td>
-                        <td>${{ plan_medico }}</td>
-                        <td>${{ total_medical_insurance }}</td>
+                        <td>${{ "{:.2f}".format(plan_medico) }}</td>
+                        <td>${{ "{:.2f}".format(total_medical_insurance) }}</td>
                     </tr>
 
                     
@@ -1522,8 +1522,8 @@ Gastos Reembolsados:</td>
                         {{payment_texts}}
                         <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_2 }}</td>
-                        <td>${{ total_col_2_year }}</td>
+                        <td>${{ "{:.2f}".format(total_col_2) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_2_year) }}</td>
                     </tr>
                         <tr>
                         <td></td>
@@ -1573,41 +1573,41 @@ Gastos Reembolsados:</td>
                     </tr>
                     <tr>
                         <td>INC TAX:</td>
-                        <td>${{ tax_pr }}</td>
-                        <td>${{ total_tax_pr }}</td>
+                        <td>${{ "{:.2f}".format(tax_pr) }}</td>
+                        <td>${{ "{:.2f}".format(total_tax_pr) }}</td>
                     </tr>
 
                     <tr>
                         <td>SEGURO SOCIAL:</td>
-                        <td>${{ secure_social }}</td>
-                        <td>${{total_ss}}</td>
+                        <td>${{ "{:.2f}".format(secure_social) }}</td>
+                        <td>${{ "{:.2f}".format(total_ss)}}</td>
                     </tr>
 
                         <tr>
                         <td>SS TIPS:</td>
-                        <td>${{ ss_tips }}</td>
-                        <td>${{ total_social_tips }}</td>
+                        <td>${{ "{:.2f}".format(ss_tips) }}</td>
+                        <td>${{ "{:.2f}".format(total_social_tips) }}</td>
                     </tr>
                         <tr>
                         <td>MEDICARE:</td>
-                        <td>${{ medicare }}</td>
-                        <td>${{ total_medicare }}</td>
+                        <td>${{ "{:.2f}".format(medicare) }}</td>
+                        <td>${{ "{:.2f}".format(total_medicare) }}</td>
                     </tr>
                         <tr>
                         <td>DISABILITY:</td>
-                        <td>${{ inability }}</td>
-                        <td>${{ total_inability }}</td>
+                        <td>${{ "{:.2f}".format(inability) }}</td>
+                        <td>${{ "{:.2f}".format(total_inability) }}</td>
                     </tr>
                         <tr>
                         <td>CHAUFFEUR W:</td>
-                        <td>${{ choferil }}</td>
-                        <td>${{ total_choferil }}</td>
+                        <td>${{ "{:.2f}".format(choferil) }}</td>
+                        <td>${{ "{:.2f}".format(total_choferil) }}</td>
                     </tr>
                     
                         <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_3 }}</td>
-                        <td>${{ total_col_3_year }}</td>
+                        <td>${{ "{:.2f}".format(total_col_3) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_3_year) }}</td>
                     </tr>
                         <tr>
                         <td></td>
@@ -1665,7 +1665,7 @@ Gastos Reembolsados:</td>
                     <p>VAC ACUM: {{vacation_time}} ENF ACUM: {{sick_time}}</p>
                 </div>
                 <div class="totals">
-                    <p>Total: ${{ total }}</p>
+                    <p>Total: ${{ "{:.2f}".format(total) }}</p>
                 </div>
 
                 
@@ -1694,7 +1694,7 @@ Gastos Reembolsados:</td>
                         </div>
                         <div class="column" style="text-align: right;width: 30%;">
                             <p>Fecha: {{ actual_date }}</p>
-                            <p   style="margin-top: 40px;">Total: ${{ total }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ "{:.2f}".format(total) }}</p>
                             <p style="margin-top: 32px;">FOR: ________________</p>
                         </div>
                     </div>
@@ -1904,8 +1904,8 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
                     </tr>
                     <tr>
                         <td>REG. PAY:</td>
-                        <td>${{ regular_pay }}</td>
-                        <td>${{total_regular_pay}}</td>
+                        <td>${{ "{:.2f}".format(regular_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_regular_pay) }}</td>
                     </tr>
                 </table>
                 </div>
@@ -1918,8 +1918,8 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
                     </tr>
                     <tr>
                         <td>Retenido:</td>
-                        <td>${{ detained }}</td>
-                        <td>${{total_detained}}</td>
+                        <td>${{ "{:.2f}".format(detained) }}</td>
+                        <td>${{ "{:.2f}".format(total_detained)}}</td>
                     </tr>
 
                 </table>
@@ -1964,7 +1964,7 @@ def out_counterfoil_controller(company_id, employer_id, time_id,year):
                         </div>
                         <div class="column" style="text-align: right;width: 30%;">
                             <p>Fecha: {{ actual_date }}</p>
-                            <p   style="margin-top: 40px;">Total: ${{ total1 }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ "{:.2f}".format(total1) }}</p>
                             <p style="margin-top: 32px;">FOR: ________________</p>
                         </div>
                     </div>
@@ -2543,68 +2543,68 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
                     </tr>
                     <tr>
                         <td>REG. PAY:</td>
-                        <td>${{ regular_pay }}</td>
-                        <td>${{total_regular_pay}}</td>
+                        <td>${{ "{:.2f}".format(regular_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_regular_pay)}}</td>
                     </tr>
                     <tr>
                         <td>VACATIONS:</td>
-                        <td>${{ vacation_pay }}</td>
-                        <td>${{ total_vacation_pay }}</td>
+                        <td>${{ "{:.2f}".format(vacation_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_vacation_pay) }}</td>
                     </tr>
                         <tr>
                         <td>SICK PAY:</td>
-                        <td>${{ sick_pay }}</td>
-                        <td>${{ total_sick_pay }}</td>
+                        <td>${{ "{:.2f}".format(sick_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_sick_pay) }}</td>
                     </tr>
                         <tr>
                         <td>OVER TIME:</td>
-                        <td>${{ overtime_pay }}</td>
-                        <td>${{ total_over_pay }}</td>
+                        <td>${{ "{:.2f}".format(overtime_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_over_pay) }}</td>
                     </tr>
                         <tr>
                         <td>MEAL TIME:</td>
-                        <td>${{ meal_time_pay }}</td>
-                        <td>${{ total_meal_pay }}</td>
+                        <td>${{ "{:.2f}".format(meal_time_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_meal_pay) }}</td>
                     </tr>
                     <tr>
                         <td>HOLIDAY TIME:</td>
-                        <td>${{ holiday_time_pay }}</td>
-                        <td>${{ total_holiday_pay }}</td>
+                        <td>${{ "{:.2f}".format(holiday_time_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_holiday_pay) }}</td>
                     </tr>
                         <tr>
                         <td>COMMI:</td>
-                        <td>${{ comissions }}</td>
-                        <td>${{ total_commissions }}</td>
+                        <td>${{ "{:.2f}".format(comissions) }}</td>
+                        <td>${{ "{:.2f}".format(total_commissions) }}</td>
                     </tr>
                         <tr>
                         <td>TIPS:</td>
-                        <td>${{ tips_pay }}</td>
-                        <td>${{ total_tips }}</td>
+                        <td>${{ "{:.2f}".format(tips_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_tips) }}</td>
                     </tr>
                     <tr>
                         <td>CONCESSIONS:</td>
-                        <td>${{ concessions }}</td>
-                        <td>${{ total_concessions }}</td>
+                        <td>${{ "{:.2f}".format(concessions) }}</td>
+                        <td>${{ "{:.2f}".format(total_concessions) }}</td>
                     </tr>
                         <tr>
                         <td>SALARY:</td>
-                        <td>${{ salary }}</td>
-                        <td>${{ total_salary }}</td>
+                        <td>${{ "{:.2f}".format(salary) }}</td>
+                        <td>${{ "{:.2f}".format(total_salary) }}</td>
                     </tr>
                         <tr>
                         <td>BONUS:</td>
-                        <td>${{ bonus }}</td>
-                        <td>${{ total_bonus }}</td>
+                        <td>${{ "{:.2f}".format(bonus) }}</td>
+                        <td>${{ "{:.2f}".format(total_bonus) }}</td>
                     </tr>
                         <tr>
                         <td>OTHER 1:</td>
-                        <td>${{ others }}</td>
-                        <td>${{ total_others }}</td>
+                        <td>${{ "{:.2f}".format(others) }}</td>
+                        <td>${{ "{:.2f}".format(total_others) }}</td>
                     </tr>
                     <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_1 }}</td>
-                        <td>${{total_col_1_year}}</td>
+                        <td>${{ "{:.2f}".format(total_col_1) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_1_year) }}</td>
                     </tr>
                 </table>
                 </div>
@@ -2618,41 +2618,41 @@ def counterfoil_by_period_controller(company_id, employer_id, period_id):
                     <tr>
                         <td>
 Gastos Reembolsados:</td>
-                        <td>${{ refund }}</td>
-                        <td>${{ total_refund }}</td>
+                        <td>${{ "{:.2f}".format(refund) }}</td>
+                        <td>${{ "{:.2f}".format(total_refund) }}</td>
                     </tr>
                     <tr>
                         <td>ASUME:</td>
-                        <td>${{ asume }}</td>
-                        <td>${{total_asume}}</td>
+                        <td>${{ "{:.2f}".format(asume) }}</td>
+                        <td>${{ "{:.2f}".format(total_asume)}}</td>
                     </tr>
                         <tr>
                         <td>DONATIVOS:</td>
-                        <td>${{ donation }}</td>
-                        <td>${{ total_donation }}</td>
+                        <td>${{ "{:.2f}".format(donation) }}</td>
+                        <td>${{ "{:.2f}".format(total_donation) }}</td>
                     </tr>
                         <tr>
                         <td>AFLAC:</td>
-                        <td>${{ aflac }}</td>
-                        <td>${{ total_aflac }}</td>
+                        <td>${{ "{:.2f}".format(aflac) }}</td>
+                        <td>${{ "{:.2f}".format(total_aflac) }}</td>
                     </tr>
                      <tr>
                         <td>CODA PLANS:</td>
-                        <td>${{ coda_plans }}</td>
-                        <td>${{ total_coda_plans }}</td>
+                        <td>${{ "{:.2f}".format(coda_plans) }}</td>
+                        <td>${{ "{:.2f}".format(total_coda_plans) }}</td>
                     </tr>
  <tr>
     <td>Plan Medico:</td>
-                    <td>${{ plan_medico }}</td>
-                        <td>${{ total_medical_insurance }}</td>
+                    <td>${{ "{:.2f}".format(plan_medico) }}</td>
+                        <td>${{ "{:.2f}".format(total_medical_insurance) }}</td>
 
 </tr>
                     
                         {{payment_texts}}
                         <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_2 }}</td>
-                        <td>${{ total_col_2_year }}</td>
+                        <td>${{ "{:.2f}".format(total_col_2) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_2_year) }}</td>
                     </tr>
                         <tr>
                         <td></td>
@@ -2702,41 +2702,41 @@ Gastos Reembolsados:</td>
                     </tr>
                     <tr>
                         <td>INC TAX:</td>
-                        <td>${{ tax_pr }}</td>
-                        <td>${{ total_tax_pr }}</td>
+                        <td>${{ "{:.2f}".format(tax_pr) }}</td>
+                        <td>${{ "{:.2f}".format(total_tax_pr) }}</td>
                     </tr>
 
                     <tr>
                         <td>SEGURO SOCIAL:</td>
-                        <td>${{ secure_social }}</td>
-                        <td>${{total_ss}}</td>
+                        <td>${{ "{:.2f}".format(secure_social) }}</td>
+                        <td>${{ "{:.2f}".format(total_ss) }}</td>
                     </tr>
 
                         <tr>
                         <td>SS TIPS:</td>
-                        <td>${{ ss_tips }}</td>
-                        <td>${{ total_social_tips }}</td>
+                        <td>${{ "{:.2f}".format(ss_tips) }}</td>
+                        <td>${{ "{:.2f}".format(total_social_tips) }}</td>
                     </tr>
                         <tr>
                         <td>MEDICARE:</td>
-                        <td>${{ medicare }}</td>
-                        <td>${{ total_medicare }}</td>
+                        <td>${{ "{:.2f}".format(medicare) }}</td>
+                        <td>${{ "{:.2f}".format(total_medicare) }}</td>
                     </tr>
                         <tr>
                         <td>DISABILITY:</td>
-                        <td>${{ inability }}</td>
-                        <td>${{ total_inability }}</td>
+                        <td>${{ "{:.2f}".format(inability) }}</td>
+                        <td>${{ "{:.2f}".format(total_inability) }}</td>
                     </tr>
                         <tr>
                         <td>CHAUFFEUR W:</td>
-                        <td>${{ choferil }}</td>
-                        <td>${{ total_choferil }}</td>
+                        <td>${{ "{:.2f}".format(choferil) }}</td>
+                        <td>${{ "{:.2f}".format(total_choferil) }}</td>
                     </tr>
                     
                         <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_3 }}</td>
-                        <td>${{ total_col_3_year }}</td>
+                        <td>${{ "{:.2f}".format(total_col_3) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_3_year) }}</td>
                     </tr>
                         <tr>
                         <td></td>
@@ -2794,7 +2794,7 @@ Gastos Reembolsados:</td>
                     <p>VAC ACUM: {{vacation_time}} ENF ACUM: {{sick_time}}</p>
                 </div>
                 <div class="totals">
-                    <p>Total: ${{ total }}</p>
+                    <p>Total: ${{ "{:.2f}".format(total) }}</p>
                 </div>
 
                 
@@ -2823,7 +2823,7 @@ Gastos Reembolsados:</td>
                         </div>
                         <div class="column" style="text-align: right;width: 30%;">
                             <p>Fecha: {{ actual_date }}</p>
-                            <p   style="margin-top: 40px;">Total: ${{ total }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ "{:.2f}".format(total) }}</p>
                             <p style="margin-top: 32px;">FOR: ________________</p>
                         </div>
                     </div>
@@ -4140,68 +4140,68 @@ def voucherTemplate():
                     </tr>
                     <tr>
                         <td>REG. PAY:</td>
-                        <td>${{ regular_pay }}</td>
-                        <td>${{total_regular_pay}}</td>
+                        <td>${{ "{:.2f}".format(regular_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_regular_pay) }}</td>
                     </tr>
                     <tr>
                         <td>VACATIONS:</td>
-                        <td>${{ vacation_pay }}</td>
-                        <td>${{ total_vacation_pay }}</td>
+                        <td>${{ "{:.2f}".format(vacation_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_vacation_pay) }}</td>
                     </tr>
                         <tr>
                         <td>SICK PAY:</td>
-                        <td>${{ sick_pay }}</td>
-                        <td>${{ total_sick_pay }}</td>
+                        <td>${{ "{:.2f}".format(sick_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_sick_pay) }}</td>
                     </tr>
                         <tr>
                         <td>OVER TIME:</td>
-                        <td>${{ overtime_pay }}</td>
-                        <td>${{ total_over_pay }}</td>
+                        <td>${{ "{:.2f}".format(overtime_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_over_pay) }}</td>
                     </tr>
                         <tr>
                         <td>MEAL TIME:</td>
-                        <td>${{ meal_time_pay }}</td>
-                        <td>${{ total_meal_pay }}</td>
+                        <td>${{ "{:.2f}".format(meal_time_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_meal_pay) }}</td>
                     </tr>
                     <tr>
                         <td>HOLIDAY TIME:</td>
-                        <td>${{ holiday_time_pay }}</td>
-                        <td>${{ total_holiday_pay }}</td>
+                        <td>${{ "{:.2f}".format(holiday_time_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_holiday_pay) }}</td>
                     </tr>
                         <tr>
                         <td>COMMI:</td>
-                        <td>${{ comissions }}</td>
-                        <td>${{ total_commissions }}</td>
+                        <td>${{ "{:.2f}".format(comissions) }}</td>
+                        <td>${{ "{:.2f}".format(total_commissions) }}</td>
                     </tr>
                         <tr>
                         <td>TIPS:</td>
-                        <td>${{ tips_pay }}</td>
-                        <td>${{ total_tips }}</td>
+                        <td>${{ "{:.2f}".format(tips_pay) }}</td>
+                        <td>${{ "{:.2f}".format(total_tips) }}</td>
                     </tr>
                     <tr>
                         <td>CONCESSIONS:</td>
-                        <td>${{ concessions }}</td>
-                        <td>${{ total_concessions }}</td>
+                        <td>${{ "{:.2f}".format(concessions) }}</td>
+                        <td>${{ "{:.2f}".format(total_concessions) }}</td>
                     </tr>
                         <tr>
                         <td>SALARY:</td>
-                        <td>${{ salary }}</td>
-                        <td>${{ total_salary }}</td>
+                        <td>${{ "{:.2f}".format(salary) }}</td>
+                        <td>${{ "{:.2f}".format(total_salary) }}</td>
                     </tr>
                         <tr>
                         <td>BONUS:</td>
-                        <td>${{ bonus }}</td>
-                        <td>${{ total_bonus }}</td>
+                        <td>${{ "{:.2f}".format(bonus) }}</td>
+                        <td>${{ "{:.2f}".format(total_bonus) }}</td>
                     </tr>
                         <tr>
                         <td>OTHER 1:</td>
-                        <td>${{ others }}</td>
-                        <td>${{ total_others }}</td>
+                        <td>${{ "{:.2f}".format(others) }}</td>
+                        <td>${{ "{:.2f}".format(total_others) }}</td>
                     </tr>
                     <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_1 }}</td>
-                        <td>${{total_col_1_year}}</td>
+                        <td>${{ "{:.2f}".format(total_col_1) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_1_year) }}</td>
                     </tr>
                 </table>
                 </div>
@@ -4215,28 +4215,28 @@ def voucherTemplate():
                     <tr>
                         <td>
 Gastos Reembolsados:</td>
-                        <td>${{ refund }}</td>
-                        <td>${{ total_refund }}</td>
+                        <td>${{ "{:.2f}".format(refund) }}</td>
+                        <td>${{ "{:.2f}".format(total_refund) }}</td>
                     </tr>
                     <tr>
                         <td>ASUME:</td>
-                        <td>${{ asume }}</td>
-                        <td>${{total_asume}}</td>
+                        <td>${{ "{:.2f}".format(asume) }}</td>
+                        <td>${{ "{:.2f}".format(total_asume)}}</td>
                     </tr>
                         <tr>
                         <td>DONATIVOS:</td>
-                        <td>${{ donation }}</td>
-                        <td>${{ total_donation }}</td>
+                        <td>${{ "{:.2f}".format(donation) }}</td>
+                        <td>${{ "{:.2f}".format(total_donation) }}</td>
                     </tr>
                         <tr>
                         <td>AFLAC:</td>
-                        <td>${{ aflac }}</td>
-                        <td>${{ total_aflac }}</td>
+                        <td>${{ "{:.2f}".format(aflac) }}</td>
+                        <td>${{ "{:.2f}".format(total_aflac) }}</td>
                     </tr>
                       <tr>
                         <td>CODA PLANS:</td>
-                        <td>${{ coda_plans }}</td>
-                        <td>${{ total_coda_plans }}</td>
+                        <td>${{ "{:.2f}".format(coda_plans) }}</td>
+                        <td>${{ "{:.2f}".format(total_coda_plans) }}</td>
                     </tr>
 
                     
@@ -4246,8 +4246,8 @@ Gastos Reembolsados:</td>
                         {{payment_texts}}
                         <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_2 }}</td>
-                        <td>${{ total_col_2_year }}</td>
+                        <td>${{ "{:.2f}".format(total_col_2) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_2_year) }}</td>
                     </tr>
                         <tr>
                         <td></td>
@@ -4297,41 +4297,41 @@ Gastos Reembolsados:</td>
                     </tr>
                     <tr>
                         <td>INC TAX:</td>
-                        <td>${{ tax_pr }}</td>
-                        <td>${{ total_tax_pr }}</td>
+                        <td>${{ "{:.2f}".format(tax_pr) }}</td>
+                        <td>${{ "{:.2f}".format(total_tax_pr) }}</td>
                     </tr>
 
                     <tr>
                         <td>SEGURO SOCIAL:</td>
-                        <td>${{ secure_social }}</td>
-                        <td>${{total_ss}}</td>
+                        <td>${{ "{:.2f}".format(secure_social) }}</td>
+                        <td>${{ "{:.2f}".format(total_ss)}}</td>
                     </tr>
 
                         <tr>
                         <td>SS TIPS:</td>
-                        <td>${{ ss_tips }}</td>
-                        <td>${{ total_social_tips }}</td>
+                        <td>${{ "{:.2f}".format(ss_tips) }}</td>
+                        <td>${{ "{:.2f}".format(total_social_tips) }}</td>
                     </tr>
                         <tr>
                         <td>MEDICARE:</td>
-                        <td>${{ medicare }}</td>
-                        <td>${{ total_medicare }}</td>
+                        <td>${{ "{:.2f}".format(medicare) }}</td>
+                        <td>${{ "{:.2f}".format(total_medicare) }}</td>
                     </tr>
                         <tr>
                         <td>DISABILITY:</td>
-                        <td>${{ inability }}</td>
-                        <td>${{ total_inability }}</td>
+                        <td>${{ "{:.2f}".format(inability) }}</td>
+                        <td>${{ "{:.2f}".format(total_inability) }}</td>
                     </tr>
                         <tr>
                         <td>CHAUFFEUR W:</td>
-                        <td>${{ choferil }}</td>
-                        <td>${{ total_choferil }}</td>
+                        <td>${{ "{:.2f}".format(choferil) }}</td>
+                        <td>${{ "{:.2f}".format(total_choferil) }}</td>
                     </tr>
                     
                         <tr>
                         <td>Total:</td>
-                        <td>${{ total_col_3 }}</td>
-                        <td>${{ total_col_3_year }}</td>
+                        <td>${{ "{:.2f}".format(total_col_3) }}</td>
+                        <td>${{ "{:.2f}".format(total_col_3_year) }}</td>
                     </tr>
                         <tr>
                         <td></td>
@@ -4389,7 +4389,7 @@ Gastos Reembolsados:</td>
                     <p>VAC ACUM: {{vacation_time}} ENF ACUM: {{sick_time}}</p>
                 </div>
                 <div class="totals">
-                    <p>Total: ${{ total }}</p>
+                    <p>Total: ${{ "{:.2f}".format(total) }}</p>
                 </div>
 
                 
@@ -4419,7 +4419,7 @@ Gastos Reembolsados:</td>
                         </div>
                         <div class="column" style="text-align: right;width: 30%;">
                             <p>Fecha: {{ actual_date }}</p>
-                            <p   style="margin-top: 40px;">Total: ${{ total }}</p>
+                            <p   style="margin-top: 40px;">Total: ${{ "{:.2f}".format(total) }}</p>
                             <p style="margin-top: 32px;">FOR: ________________</p>
                         </div>
                     </div>
