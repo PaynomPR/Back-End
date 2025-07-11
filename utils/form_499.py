@@ -14,6 +14,13 @@ def form_withheld_499_pdf_generator(company_id, year, period):
     
     data_entry = queryForm499(company_id, year, period)
     
+    try:
+        # Open the source PDF
+        doc = fitz.open(document_dir / source_file_name)
+    except Exception as e:
+        print(f"Failed to open document: {e}")
+        return None
+
 
     try:
         for page_number in range(len(doc)):
@@ -28,12 +35,12 @@ def form_withheld_499_pdf_generator(company_id, year, period):
                             numeric_value = float(value_from_data)
                             # Format the float to two decimal places
                             field.field_value = f"{numeric_value:.2f}"
-                            except ValueError:
+                        except ValueError:
                             # If it's not a valid number, keep it as is or handle as appropriate
                             field.field_value = str(value_from_data)
                             print(f"Warning: Field '{field.field_name}' has non-numeric value '{value_from_data}'. Keeping as original string.")
                         field.update()
-                        doc.save(document_dir / output_file_name, incremental=False, encryption=fitz.PDF_ENCRYPT_KEEP)
+        doc.save(document_dir / output_file_name, incremental=False, encryption=fitz.PDF_ENCRYPT_KEEP)
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
