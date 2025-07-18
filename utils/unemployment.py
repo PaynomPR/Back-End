@@ -117,5 +117,5 @@ def form_unemployment_pdf_generator(company_id, year, period):
 
     combine_pdfs(pdf_list, combined_pdf_path)
    
-    return part1
+    return combined_pdf_path
  
