@@ -90,17 +90,7 @@ def form_unemployment_pdf_generator(company_id, year, period):
 
         
 
-    # Combine individual PDFs into a single PDF (optional)
-    def combine_pdfs(pdf_list, output_file_name):
-        
-        combined_doc = fitz.open()
-
-        for pdf_path in pdf_list:
-            print("-----------------pdf_path-----------------"+pdf_path)
-            combined_doc.insert_pdf(fitz.open(pdf_path))
-
-        combined_doc.save(output_file_name)
-        combined_doc.close()
+    
 
     pdf_list = []
 
@@ -114,9 +104,9 @@ def form_unemployment_pdf_generator(company_id, year, period):
     print("-----------------pdf_list-----------------")
     print(pdf_list)  # Print the list of PDF paths as strings
     combined_pdf_path = document_dir / 'unemployment_combined.pdf'
-    part1 = document_dir / 'unemployment_part_1.pdf'
+    
 
-    combine_pdfs(pdf_list, combined_pdf_path)
+    
    
     return combined_pdf_path
  
