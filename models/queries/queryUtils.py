@@ -521,7 +521,7 @@ def getEmployersAmount(company_id, date_period):
       ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id
       ).filter(
         Employers.company_id == company_id,
-        Employers.choferil == "NO",
+        
         Time.pay_date >= date_period['start'],
         Time.pay_date <= date_period['end']
         

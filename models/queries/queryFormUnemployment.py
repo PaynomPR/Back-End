@@ -48,18 +48,21 @@ def queryFormUnemployment (company_id, year, period):
             if previous_total:
                 remaining_limit_a = max(0, 7000 - previous_total[0])
                 totalAmount_taxeable_a += min(value.total, remaining_limit_a)
-                remaining_limit_b = max(0, 9000 - previous_total[0])
-                totalAmount_taxeable_b += min(value.total, remaining_limit_b)
+                if (value.choferil == "SI"):
+                    remaining_limit_b = max(0, 9000 - previous_total[0])
+                    totalAmount_taxeable_b += min(value.total, remaining_limit_b)
             else:
                 remaining_limit_a = max(0, 7000 )
                 totalAmount_taxeable_a += min(value.total, remaining_limit_a)
-                remaining_limit_b = max(0, 9000)
-                totalAmount_taxeable_b += min(value.total, remaining_limit_b)
+                if (value.choferil == "SI"):
+                    remaining_limit_b = max(0, 9000)
+                    totalAmount_taxeable_b += min(value.total, remaining_limit_b)
         else:
             remaining_limit_a = max(0, 7000 )
             totalAmount_taxeable_a += min(value.total, remaining_limit_a)
-            remaining_limit_b = max(0, 9000)
-            totalAmount_taxeable_b += min(value.total, remaining_limit_b) 
+            if (value.choferil == "SI"):
+                remaining_limit_b = max(0, 9000)
+                totalAmount_taxeable_b += min(value.total, remaining_limit_b) 
         tmpEmployees.append(data)
         
         totalAmount += roundedAmount(value.total)
