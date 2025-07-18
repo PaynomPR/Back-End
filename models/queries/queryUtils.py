@@ -515,6 +515,7 @@ def getEmployersAmount(company_id, date_period):
       Employers.first_name,
       Employers.last_name,
       Employers.licence,
+      Employers.choferil,
       Employers.social_security_number,
       func.count(Time.period_id).label('total_weeks'),
       ).select_from(Period).join(Time, Period.id == Time.period_id ).join(Employers, Time.employer_id == Employers.id
