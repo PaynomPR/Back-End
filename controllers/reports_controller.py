@@ -430,9 +430,8 @@ def get_company_periodical_summary(company_id, start, end):
             current_vacation_balance += added_data['vacation_added'] - used_data['vacation_used']
             current_sick_balance += added_data['sick_added'] - used_data['sick_used']
 
-            # We only add a period entry if there was activity within the period itself
-            # or if it's the very first period and there's a starting balance to show.
-            if total_minutes_changed == 0 and p != periods_in_range[0] and current_vacation_balance == 0 and current_sick_balance == 0:
+            # Only include periods where there was a change in vacation or sick hours.
+            if total_minutes_changed == 0:
                 continue
 
             period_entry = {

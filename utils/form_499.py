@@ -33,12 +33,14 @@ def form_withheld_499_pdf_generator(company_id, year, period):
                         try:
                             # Try to convert the string to a float
                             numeric_value = float(value_from_data)
-                            # Format the float to two decimal places
-                            field.field_value = f"{numeric_value:.2f}"
+                            if not numeric_value.is_integer():
+                                field.field_value = f"{numeric_value:.2f}"
+                            else:
+                                # If it's an integer, convert it back to an integer string
+                                field.field_value = str(int(numeric_value))
                         except ValueError:
                             # If it's not a valid number, keep it as is or handle as appropriate
                             field.field_value = str(value_from_data)
-                            print(f"Warning: Field '{field.field_name}' has non-numeric value '{value_from_data}'. Keeping as original string.")
                         field.update()
         doc.save(document_dir / output_file_name, incremental=False, encryption=fitz.PDF_ENCRYPT_KEEP)
     except Exception as e:

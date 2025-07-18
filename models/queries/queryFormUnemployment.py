@@ -32,6 +32,9 @@ def queryFormUnemployment (company_id, year, period):
    
     for value in employees:
         employee_id = value.id
+        if (value.choferil):
+            continue
+
         data = {
             f'text_social_security_{index}': value.social_security_number,
             f'text_name_employers_{index}': f'{value.first_name} {value.last_name}',
